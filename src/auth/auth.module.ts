@@ -10,10 +10,19 @@ import { ConfigService } from '@nestjs/config';
 import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from './jwt.strategy';
 import { HttpModule } from '@nestjs/axios';
+import { Client, ClientSchema } from 'src/client/models/clients.models';
+import {
+  Financier,
+  FinancierSchema,
+} from 'src/financier/models/financier.models';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
+    MongooseModule.forFeature([
+      { name: User.name, schema: UserSchema },
+      { name: Client.name, schema: ClientSchema },
+      { name: Financier.name, schema: FinancierSchema },
+    ]),
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
       inject: [ConfigService],
@@ -25,7 +34,7 @@ import { HttpModule } from '@nestjs/axios';
       }),
     }),
     HttpModule.register({
-      baseURL: 'http://localhost:3000',
+      baseURL: 'http://localhost:5000',
     }),
     MailerModule.forRootAsync({
       useFactory: (configService: ConfigService) => ({

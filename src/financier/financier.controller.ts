@@ -3,7 +3,6 @@
 import {
   Controller,
   Get,
-  Post,
   Put,
   Delete,
   Body,
@@ -18,11 +17,6 @@ import { FinancierDto } from './Dto/financier.dto';
 @Controller('financiers')
 export class FinancierController {
   constructor(private financierService: FinancierService) {}
-  @UsePipes(new ValidationPipe())
-  @Post()
-  async create(@Body() body: FinancierDto) {
-    return this.financierService.createFinancier(body);
-  }
 
   @Get()
   async findAll(): Promise<Financier[]> {
@@ -35,12 +29,28 @@ export class FinancierController {
   }
   @UsePipes(new ValidationPipe())
   @Put('/:id')
-  update(@Param('id') id: string, @Body() body: FinancierDto) {
-    return this.financierService.updateFinancier(id, body);
+  async update(@Param('id') id: string, @Body() financierDto: FinancierDto) {
+    return this.financierService.updateFinancier(id, financierDto);
   }
 
   @Delete('/:id')
   delete(@Param('id') id: string) {
     return this.financierService.deleteFinancier(id);
+  }
+  @Get('search/:query')
+  async searchFinanciers(
+    @Param('query') query: string,
+  ): Promise<Financier[] | null> {
+    try {
+      if (!query) {
+        return null; // Ou renvoyez une liste vide selon votre logique
+      }
+      return this.financierService.searchFinanciers(query);
+    } catch (error) {
+      console.error('Erreur lors de la recherche des financiers :', error);
+      throw new Error(
+        'Une erreur est survenue lors de la recherche des financiers.',
+      );
+    }
   }
 }

@@ -3,19 +3,18 @@ import {
   Controller,
   Post,
   Body,
-  Param,
   HttpCode,
-  UseGuards,
   Res,
   ValidationPipe,
   UsePipes,
-  NotFoundException,
+  HttpException,
+  HttpStatus,
 } from '@nestjs/common';
 import { SignUpDto } from './Dto/signup.dto';
 import { LoginDto } from './Dto/login.dto';
 import { AuthService } from './auth.service';
 //import { ResetPasswordDto } from './Dto/resetpass.dto';
-import { AuthGuard } from '@nestjs/passport';
+//import { AuthGuard } from '@nestjs/passport';
 import { Response } from 'express';
 import * as Cookie from 'cookie';
 import { User } from 'src/users/models/users.models';
@@ -23,8 +22,9 @@ import { SignupWithGpDto } from './Dto/signupwithgp.dto';
 
 @Controller('auth')
 export class AuthController {
+  res: any;
   constructor(private authService: AuthService) {}
-  @UseGuards(AuthGuard('jwt'))
+
   @UsePipes(new ValidationPipe())
   @Post('signup-with-generated-password')
   @HttpCode(201)
@@ -38,26 +38,63 @@ export class AuthController {
       result,
     };
   }
-
   @UsePipes(new ValidationPipe())
   @Post('signup')
   async signUp(
     @Body() signUpDto: SignUpDto,
     @Res({ passthrough: true }) res: Response,
   ): Promise<{ token: string }> {
-    const { token } = await this.authService.signUp(signUpDto);
+    try {
+      const { token } = await this.authService.signUp(signUpDto);
 
-    const cookieValue = Cookie.serialize('AuthenticationToken', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 3600,
-      path: '/',
-    });
+      const cookieValue = Cookie.serialize('AuthenticationToken', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 3600,
+        path: '/',
+      });
 
-    res.setHeader('Set-Cookie', cookieValue);
+      // Set the cookie
+      res.setHeader('Set-Cookie', cookieValue);
 
-    return { token };
+      return { token };
+    } catch (error) {
+      if (error.code === 11000 && error.keyPattern && error.keyPattern.email) {
+        // Erreur de clé dupliquée, l'adresse e-mail existe déjà
+        throw new HttpException(
+          "L'adresse e-mail est déjà utilisée.",
+          HttpStatus.CONFLICT,
+        );
+      }
+
+      // Gérer les autres erreurs
+      throw new HttpException(
+        "Une erreur s'est produite lors de l'inscription.",
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  @Post('verify')
+  async verifyAccount(
+    @Body() signUpDto: SignUpDto,
+  ): Promise<{ success: boolean; message?: string }> {
+    const { email, verificationCode } = signUpDto;
+
+    const isVerified = await this.authService.verifyAccount(
+      email,
+      verificationCode,
+    );
+
+    if (isVerified) {
+      return { success: true };
+    } else {
+      return {
+        success: false,
+        message: "L'inscription a échoué. Veuillez réessayer.",
+      };
+    }
   }
 
   @UsePipes(new ValidationPipe())
@@ -81,21 +118,19 @@ export class AuthController {
     return { token, user };
   }
 
-  @UseGuards(AuthGuard('jwt'))
-  @Post('logout/:id')
-  async logout(
-    @Param('id') userId: string,
-    @Res() res: Response,
-  ): Promise<void> {
+  @Post('logout')
+  async logout(@Res() res: Response): Promise<void> {
     try {
-      await this.authService.logout(userId);
-      res.status(200).json({ message: 'Utilisateur déconnecté avec succès' });
+      // Supprimer le cookie en définissant sa date d'expiration dans le passé
+      res.clearCookie('AuthenticationToken');
+      res
+        .status(HttpStatus.OK)
+        .json({ message: 'Utilisateur déconnecté avec succès' });
     } catch (error) {
-      if (error instanceof NotFoundException) {
-        res.status(404).json({ error: 'Utilisateur non trouvé' });
-      } else {
-        res.status(500).json({ error: 'Erreur lors de la déconnexion' });
-      }
+      console.error('Erreur lors de la déconnexion :', error);
+      res
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json({ error: 'Erreur lors de la déconnexion' });
     }
   }
 
@@ -105,9 +140,25 @@ export class AuthController {
     const success = await this.authService.sendPasswordResetEmail(email);
 
     if (success) {
-      return { message: 'Password reset email sent successfully' };
+      return {
+        message: 'Email de réinitialisation du mot de passe envoyé avec succès',
+      };
     } else {
-      return { message: 'Email not found' };
+      return { message: 'Email non trouvé ' };
+    }
+  }
+  @Post('verify-reset-code')
+  @HttpCode(200)
+  async verifyResetCode(
+    @Body('email') email: string,
+    @Body('code') code: string,
+  ): Promise<any> {
+    const isValidCode = await this.authService.verifyResetCode(email, code);
+
+    if (isValidCode) {
+      return { success: true, message: 'Le code est valide' };
+    } else {
+      return { success: false, message: 'Code invalide ou expiré' };
     }
   }
 
@@ -115,19 +166,18 @@ export class AuthController {
   @HttpCode(200)
   async resetPassword(
     @Body('email') email: string,
-    @Body('code') code: string,
     @Body('newPassword') newPassword: string,
   ): Promise<any> {
-    const success = await this.authService.resetPassword(
-      email,
-      code,
-      newPassword,
-    );
+    const success = await this.authService.resetPassword(email, newPassword);
 
     if (success) {
-      return { message: 'Password reset successful' };
+      return {
+        message: 'Réinitialisation du mot de passe réussie',
+      };
     } else {
-      return { message: 'Invalid or expired code' };
+      return {
+        message: 'Email invalide ou réinitialisation du mot de passe échouée',
+      };
     }
   }
 }

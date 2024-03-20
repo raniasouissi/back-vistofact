@@ -2,6 +2,7 @@
 import {
   IsArray,
   IsEmail,
+  IsEmpty,
   IsNotEmpty,
   IsOptional,
   IsString,
@@ -45,4 +46,9 @@ export class SignUpDto {
     message: 'Le mot de passe doit contenir au moins 8 caractères',
   })
   readonly password: string;
+  @IsOptional()
+  @IsString()
+  readonly matriculeFiscale?: string;
+  @IsEmpty()
+  readonly verificationCode: string;
 }

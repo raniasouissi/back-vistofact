@@ -13,13 +13,8 @@ export class FinancierService {
     private financierModel: Model<FinancierDocument>,
   ) {}
 
-  async createFinancier(financierDto: FinancierDto): Promise<Financier> {
-    const createdFinancier = new this.financierModel(financierDto);
-    return createdFinancier.save();
-  }
-
   async getAllFinanciers(): Promise<Financier[]> {
-    return this.financierModel.find({ role: 'financier' }).exec();
+    return this.financierModel.find({ roles: 'financier' }).exec();
   }
 
   async findOne(id: string): Promise<Financier> {
@@ -34,14 +29,17 @@ export class FinancierService {
     id: string,
     financierDto: FinancierDto,
   ): Promise<Financier> {
-    const updatedFinancier = await this.financierModel
-      .findByIdAndUpdate(id, { $set: financierDto }, { new: true })
-      .exec();
+    const existingFinancier = await this.financierModel.findById(id).exec();
 
-    if (!updatedFinancier) {
+    if (!existingFinancier) {
       throw new NotFoundException('Financier not found');
     }
 
+    // Mettre à jour les champs du modèle avec les valeurs du DTO
+    Object.assign(existingFinancier, financierDto);
+
+    // Sauvegarder le modèle mis à jour
+    const updatedFinancier = await existingFinancier.save();
     return updatedFinancier;
   }
 
@@ -55,5 +53,27 @@ export class FinancierService {
     }
 
     return 'Financier has been deleted successfully';
+  }
+  async searchFinanciers(query: string): Promise<Financier[] | null> {
+    try {
+      if (!query) {
+        return null; // ou renvoyez une liste vide selon votre logique
+      }
+      const financiers = await this.financierModel
+        .find({
+          $or: [
+            { name: { $regex: query, $options: 'i' } },
+            { email: { $regex: query, $options: 'i' } },
+          ],
+        })
+        .exec();
+
+      return financiers;
+    } catch (error) {
+      console.error('Erreur lors de la recherche des financiers :', error);
+      throw new Error(
+        'Une erreur est survenue lors de la recherche des financiers.',
+      );
+    }
   }
 }

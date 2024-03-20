@@ -1,20 +1,12 @@
-import { IsEmail, IsNotEmpty, IsString, MinLength } from 'class-validator';
+import { IsEmail, IsString, MinLength } from 'class-validator';
 
 export class FinancierDto {
-  readonly role: string;
-  @IsNotEmpty()
-  @IsEmail({}, { message: 'Veuillez entrer une adresse e-mail correcte' })
-  readonly email: string;
-
-  @IsNotEmpty()
+  @MinLength(2)
   @IsString()
-  @MinLength(8, {
-    message: 'Le mot de passe doit contenir au moins 8 caractères',
-  })
-  readonly password: string;
+  name: string;
 
-  @IsNotEmpty()
-  @IsString()
-  @MinLength(3, { message: 'Le nom doit contenir au moins 3 caractères' })
-  readonly name: string;
+  @IsEmail()
+  email: string;
+
+  phonenumber: string;
 }

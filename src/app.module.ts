@@ -6,7 +6,6 @@ import { ConfigModule } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { AuthModule } from './auth/auth.module';
 import { ClientsModule } from './client/clients.module';
-import { AdminsModule } from './admin/admin.module';
 import { FinancierModule } from './financier/financier.module';
 //import { MailerModule } from '@nestjs-modules/mailer';
 
@@ -24,7 +23,6 @@ import { FinancierModule } from './financier/financier.module';
     UsersModule,
     AuthModule,
     ClientsModule,
-    AdminsModule,
     FinancierModule,
   ],
   controllers: [AppController],

@@ -19,7 +19,5 @@ export class SignupWithGpDto {
   @IsString()
   pays?: string;
 
-  @IsOptional()
-  @IsString()
-  phonenumber?: string;
+  phonenumber: string;
 }

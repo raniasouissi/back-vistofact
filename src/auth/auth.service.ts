@@ -19,21 +19,27 @@ import { SignupWithGpDto } from './Dto/signupwithgp.dto';
 //import { v4 as uuidv4 } from 'uuid';
 //import { Response } from 'express';
 //import { ResetPasswordDto } from './Dto/resetpass.dto';
+import { addSeconds } from 'date-fns';
+import { Client } from 'src/client/models/clients.models';
+import { Financier } from 'src/financier/models/financier.models';
 
 @Injectable()
 export class AuthService {
   constructor(
     @InjectModel(User.name)
     private userModel: Model<User>,
+    @InjectModel(Client.name)
+    private clientModel: Model<Client>,
+    @InjectModel(Financier.name)
+    private FinancierModel: Model<Financier>,
     private jwtService: JwtService,
     private readonly mailerService: MailerService,
   ) {}
 
   async logout(userId: string): Promise<void> {
-    // Utilisez l'ID pour déconnecter l'utilisateur
-    const user: User = await this.userModel.findByIdAndUpdate(
+    const user = await this.userModel.findByIdAndUpdate(
       userId,
-      { $unset: { accessToken: 1 } },
+      { $unset: { accessToken: 1 } }, // Supprime le champ accessToken de l'utilisateur
       { new: true },
     );
 
@@ -42,35 +48,53 @@ export class AuthService {
     }
   }
 
+  // Fonction de génération de mot de passe
   private generateRandomPassword(length: number): string {
-    const characters =
-      'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const lowercase = 'abcdefghijklmnopqrstuvwxyz';
+    const numbers = '0123456789';
+    const symbols = '!@#$%^&*()_+-=[]{}|;:,.<>?';
+
+    const allCharacters = uppercase + lowercase + numbers + symbols;
+    const passwordRegex =
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+
     let password = '';
+
+    // Générer le mot de passe
     for (let i = 0; i < length; i++) {
-      const randomIndex = Math.floor(Math.random() * characters.length);
-      password += characters.charAt(randomIndex);
+      const randomIndex = Math.floor(Math.random() * allCharacters.length);
+      password += allCharacters.charAt(randomIndex);
     }
+
+    // Assurer que le mot de passe généré respecte les critères
+    if (!password.match(passwordRegex)) {
+      // Régénérer le mot de passe si nécessaire
+      return this.generateRandomPassword(length);
+    }
+
     return password;
   }
+
+  // Utilisation de la fonction de génération de mot de passe
+  generatedPassword = this.generateRandomPassword(12); // Génère un mot de passe de longueur 12
 
   async signUpWithGeneratedPassword(
     signUpDto: SignupWithGpDto,
   ): Promise<{ message: string; result: any }> {
-    const { name, email, roles, address, pays, phonenumber } = signUpDto;
+    const { name, email, phonenumber, roles } = signUpDto;
 
     try {
       const temporaryPassword = this.generateRandomPassword(12);
 
       const hashedPassword = await bcrypt.hash(temporaryPassword, 10);
 
-      const user = await this.userModel.create({
+      const user = await this.FinancierModel.create({
         name,
         email,
         password: hashedPassword,
-        roles,
-        address,
-        pays,
         phonenumber,
+        roles,
       });
 
       await this.mailerService.sendMail({
@@ -98,21 +122,26 @@ export class AuthService {
     }
   }
 
-  // Dans authservice
-  async signUp(signUpDto: SignUpDto): Promise<{ token: string }> {
+  /*async signUp(signUpDto: SignUpDto): Promise<{ token: string }> {
     const {
       name,
       email,
       password,
-
       roles,
       address,
       pays,
       phonenumber,
       codepostale,
+      matriculeFiscale,
     } = signUpDto;
 
     const hashedPassword = await bcrypt.hash(password, 10);
+
+    let userType = 'physique';
+
+    if (matriculeFiscale) {
+      userType = 'moral';
+    }
 
     const user = await this.userModel.create({
       name,
@@ -123,13 +152,107 @@ export class AuthService {
       pays,
       phonenumber,
       codepostale,
+      type: userType,
+      matriculeFiscale, // Enregistrez le matricule fiscal dans la base de données
     });
 
     const token = this.jwtService.sign({ id: user._id, roles: user.roles });
 
     return { token };
+  }*/
+  async signUp(signUpDto: SignUpDto): Promise<{ token: string }> {
+    const {
+      name,
+      email,
+      password,
+      roles,
+      address,
+      pays,
+      phonenumber,
+      codepostale,
+      matriculeFiscale,
+    } = signUpDto;
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    let userType = 'client physique';
+
+    if (matriculeFiscale) {
+      userType = 'client morale';
+    }
+
+    const verificationCode = Math.floor(
+      100000 + Math.random() * 900000,
+    ).toString();
+
+    const client = await this.clientModel.create({
+      name,
+      email,
+      password: hashedPassword,
+      roles,
+      address,
+      pays,
+      phonenumber,
+      codepostale,
+      type: userType,
+      matriculeFiscale,
+      verificationCode,
+      verificationCodeExpiration: addSeconds(new Date(), 120), // Code expirera dans 60 secondes
+    });
+
+    await this.sendVerificationEmail(client.email, verificationCode);
+
+    // Attendre la vérification de l'e-mail avant de générer le token
+    const isVerified = await this.verifyAccount(email, verificationCode);
+
+    if (isVerified) {
+      const token = this.jwtService.sign({
+        id: client._id,
+        roles: client.roles,
+      });
+      return { token };
+    } else {
+      // Si la vérification échoue, vous pouvez gérer cela en conséquence
+      throw new Error("Échec de la vérification de l'e-mail.");
+    }
   }
 
+  async verifyAccount(
+    email: string,
+    verificationCode: string,
+  ): Promise<boolean> {
+    const user = await this.clientModel.findOne({
+      email,
+      verificationCode,
+      verificationCodeExpiration: { $gt: new Date() },
+    });
+
+    if (user) {
+      // Marquer l'utilisateur comme vérifié
+      user.isVerified = true;
+      await user.save();
+      return true;
+    } else {
+      // Supprimer le compte si la vérification échoue
+      await this.clientModel.deleteOne({ email });
+      return false;
+    }
+  }
+
+  async sendVerificationEmail(
+    email: string,
+    verificationCode: string,
+  ): Promise<void> {
+    await this.mailerService.sendMail({
+      to: email,
+      subject: "Vérification d'adresse e-mail",
+      html: `
+        <p>Bienvenue sur Visto !</p>
+        <p>Veuillez utiliser le code suivant pour vérifier votre adresse e-mail :</p>
+        <strong>${verificationCode}</strong>
+      `,
+    });
+  }
   async login(loginDto: LoginDto): Promise<{ token: string; user: User }> {
     const { email, password } = loginDto;
 
@@ -153,7 +276,6 @@ export class AuthService {
 
     return { token, user };
   }
-
   async sendPasswordResetEmail(email: string): Promise<boolean> {
     const user = await this.userModel.findOne({ email });
 
@@ -164,10 +286,7 @@ export class AuthService {
     const verificationCode = Math.floor(
       100000 + Math.random() * 900000,
     ).toString();
-
-    // Définissez la date d'expiration du code de vérification
-    const expiration = new Date();
-    expiration.setHours(expiration.getHours() + 24); // Expiration en 48 heures
+    const expiration = addSeconds(new Date(), 60);
 
     user.resetPasswordCode = verificationCode;
     user.resetPasswordCodeExpiration = expiration;
@@ -183,26 +302,31 @@ export class AuthService {
     return true;
   }
 
-  async resetPassword(
-    email: string,
-    code: string,
-    newPassword: string,
-  ): Promise<boolean> {
+  async verifyResetCode(email: string, code: string): Promise<boolean> {
     const user = await this.userModel.findOne({
       email,
       resetPasswordCode: code,
-      resetPasswordCodeExpiration: { $gt: new Date() }, // Vérifie si le code est encore valide
+      resetPasswordCodeExpiration: { $gt: new Date() },
     });
+
+    return !!user;
+  }
+
+  async resetPassword(email: string, newPassword: string): Promise<boolean> {
+    const user = await this.userModel.findOne({ email });
 
     if (!user) {
       return false;
     }
 
-    // Mise à jour du mot de passe et réinitialisation du code
+    // Mettez à jour le mot de passe avec le nouveau mot de passe hashé
     user.password = await bcrypt.hash(newPassword, 10);
+
+    // Réinitialisez le code et la date d'expiration
     user.resetPasswordCode = null;
     user.resetPasswordCodeExpiration = null;
 
+    // Sauvegardez les modifications dans la base de données
     await user.save();
 
     return true;
