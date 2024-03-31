@@ -26,6 +26,8 @@ export class Client extends User {
   @Prop({ default: null, type: String })
   @IsOptional() // Rend le champ facultatif lors de la validation
   matriculeFiscale?: string;
+  @Prop({ default: null }) // Par défaut, le resetToken est null
+  resetToken: string;
 }
 
 export const ClientSchema = SchemaFactory.createForClass(Client);

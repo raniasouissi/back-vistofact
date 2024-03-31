@@ -20,4 +20,8 @@ export class SignupWithGpDto {
   pays?: string;
 
   phonenumber: string;
+
+  @IsOptional()
+  @IsString()
+  readonly codepostale?: string;
 }

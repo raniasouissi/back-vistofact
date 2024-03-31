@@ -4,6 +4,7 @@ import { UserDto } from './Dto/users.dto';
 import { Model } from 'mongoose';
 import { User, UserDocument } from './models/users.models';
 import { InjectModel } from '@nestjs/mongoose';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UsersService {
@@ -49,5 +50,33 @@ export class UsersService {
     }
 
     return 'User has been deleted successfully';
+  }
+
+  async setPassword(token: string, newPassword: string): Promise<void> {
+    try {
+      // Trouver l'utilisateur avec le token de réinitialisation
+      const user = await this.userModel.findOne({ resetToken: token }).exec();
+      if (!user) {
+        throw new NotFoundException('Token de réinitialisation invalide');
+      }
+
+      // Mettre à jour le mot de passe de l'utilisateur
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+      await this.userModel.updateOne(
+        { _id: user._id },
+        { password: hashedPassword },
+      );
+
+      // Effacer le token de réinitialisation après avoir défini le nouveau mot de passe
+      await this.userModel.updateOne({ _id: user._id }, { resetToken: null });
+    } catch (error) {
+      console.error(
+        'Erreur lors de la réinitialisation du mot de passe :',
+        error,
+      );
+      throw new Error(
+        'Une erreur est survenue lors de la réinitialisation du mot de passe.',
+      );
+    }
   }
 }

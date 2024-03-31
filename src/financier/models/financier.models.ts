@@ -7,6 +7,16 @@ import { Document } from 'mongoose';
 export class Financier extends User {
   @Prop()
   phonenumber: string;
+  @Prop({ default: null, type: String })
+  pays?: string;
+
+  @Prop({ default: null, type: String }) // Adresse spécifique au client
+  address?: string;
+
+  @Prop({ default: null, type: String }) // Adresse spécifique au client
+  codepostale?: string;
+  @Prop({ default: null }) // Par défaut, le resetToken est null
+  resetToken: string;
 }
 
 export type FinancierDocument = Financier & Document;

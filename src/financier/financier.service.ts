@@ -64,7 +64,10 @@ export class FinancierService {
           $or: [
             { name: { $regex: query, $options: 'i' } },
             { email: { $regex: query, $options: 'i' } },
+            { phonenumber: { $regex: query, $options: 'i' } },
+            { pays: { $regex: query, $options: 'i' } },
           ],
+          roles: 'financier',
         })
         .exec();
 

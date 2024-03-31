@@ -3,7 +3,7 @@ import { AppModule } from './app.module';
 
 import { ValidationPipe } from '@nestjs/common';
 import { ExpressAdapter } from '@nestjs/platform-express';
-import helmet from 'helmet';
+//import helmet from 'helmet';
 import * as cookieParser from 'cookie-parser';
 //import * as session from 'express-session';
 
@@ -24,17 +24,5 @@ async function bootstrap() {
   });
 
   app.useGlobalPipes(new ValidationPipe());
-
-  app.use(
-    helmet({
-      contentSecurityPolicy: {
-        directives: {
-          defaultSrc: ["'self'"],
-          scriptSrc: ["'self'"],
-          styleSrc: ["'self'"],
-        },
-      },
-    }),
-  );
 }
 bootstrap();

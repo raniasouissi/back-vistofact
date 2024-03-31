@@ -7,7 +7,6 @@ import {
   Param,
   Put,
   Delete,
-  UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
 
@@ -18,12 +17,18 @@ import { Client } from './models/clients.models';
 @Controller('clients')
 export class ClientsController {
   constructor(private readonly service: ClientsService) {}
+
   @Post('signup')
-  @UsePipes(new ValidationPipe())
   async signUpClient(
-    @Body() signUpDto: ClientDto,
+    @Body(ValidationPipe) signUpDto: ClientDto,
   ): Promise<{ message: string; result: any }> {
-    return this.service.signUpClient(signUpDto);
+    try {
+      const result = await this.service.signUpClient(signUpDto);
+      return { message: result.message, result: result.result };
+    } catch (error) {
+      console.error("Erreur lors de l'inscription :", error);
+      throw new Error("Une erreur est survenue lors de l'inscription.");
+    }
   }
 
   @Get()

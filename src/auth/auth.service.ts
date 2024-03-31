@@ -22,6 +22,7 @@ import { SignupWithGpDto } from './Dto/signupwithgp.dto';
 import { addSeconds } from 'date-fns';
 import { Client } from 'src/client/models/clients.models';
 import { Financier } from 'src/financier/models/financier.models';
+import { randomBytes } from 'crypto';
 
 @Injectable()
 export class AuthService {
@@ -48,46 +49,20 @@ export class AuthService {
     }
   }
 
-  // Fonction de génération de mot de passe
-  private generateRandomPassword(length: number): string {
-    const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    const lowercase = 'abcdefghijklmnopqrstuvwxyz';
-    const numbers = '0123456789';
-    const symbols = '!@#$%^&*()_+-=[]{}|;:,.<>?';
-
-    const allCharacters = uppercase + lowercase + numbers + symbols;
-    const passwordRegex =
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-
-    let password = '';
-
-    // Générer le mot de passe
-    for (let i = 0; i < length; i++) {
-      const randomIndex = Math.floor(Math.random() * allCharacters.length);
-      password += allCharacters.charAt(randomIndex);
-    }
-
-    // Assurer que le mot de passe généré respecte les critères
-    if (!password.match(passwordRegex)) {
-      // Régénérer le mot de passe si nécessaire
-      return this.generateRandomPassword(length);
-    }
-
-    return password;
-  }
-
-  // Utilisation de la fonction de génération de mot de passe
-  generatedPassword = this.generateRandomPassword(12); // Génère un mot de passe de longueur 12
-
   async signUpWithGeneratedPassword(
     signUpDto: SignupWithGpDto,
   ): Promise<{ message: string; result: any }> {
-    const { name, email, phonenumber, roles } = signUpDto;
+    const { name, email, phonenumber, roles, codepostale, address, pays } =
+      signUpDto;
 
     try {
-      const temporaryPassword = this.generateRandomPassword(12);
+      const temporaryPassword = randomBytes(8).toString('hex');
 
+      // Hacher le mot de passe temporaire
       const hashedPassword = await bcrypt.hash(temporaryPassword, 10);
+
+      // Générer un token pour le lien de réinitialisation du mot de passe
+      const token = randomBytes(32).toString('hex');
 
       const user = await this.FinancierModel.create({
         name,
@@ -95,21 +70,12 @@ export class AuthService {
         password: hashedPassword,
         phonenumber,
         roles,
+        codepostale,
+        address,
+        pays,
+        resetToken: token,
       });
-
-      await this.mailerService.sendMail({
-        to: email,
-        subject: 'Inscription réussie sur Visto Fact',
-        html: `<p>Bienvenue ${name},</p>
-                <p>Félicitations! Vous avez été inscrit avec succès sur Visto Fact. Voici vos informations d'inscription :</p>
-                <ul>
-                   
-                    <li>Email: ${email}</li>
-                    <li>Mot de passe : ${temporaryPassword}</li>
-                </ul>
-                <p>Connectez-vous avec votre email et le mot de passe . Vous serez invité à le changer après la première connexion.</p>
-                <p>L'équipe Visto Fact vous souhaite la bienvenue!</p>`,
-      });
+      await this.sendSetPasswordEmail(email, token, name);
 
       return {
         message:
@@ -120,6 +86,27 @@ export class AuthService {
       console.error("Erreur lors de l'inscription :", error);
       throw new Error("Une erreur est survenue lors de l'inscription.");
     }
+  }
+  async sendSetPasswordEmail(
+    email: string,
+    token: string,
+    name: string,
+  ): Promise<void> {
+    const setPasswordLink = `http://localhost:3000/set-password/${token}`;
+
+    // Envoyer un e-mail au client avec le lien pour définir le mot de passe
+    await this.mailerService.sendMail({
+      to: email,
+      subject: 'Définition du mot de passe',
+      html: `
+        <p>Bonjour ${name},</p>
+        <p>Vous avez demandé à réinitialiser votre mot de passe sur Visto Fact.</p>
+        <p>Veuillez cliquer sur le lien ci-dessous pour définir votre nouveau mot de passe :</p>
+        <p><a href="${setPasswordLink}">Définir le mot de passe</a></p>
+        <p>Si vous n'avez pas demandé cette réinitialisation, vous pouvez ignorer cet e-mail en toute sécurité.</p>
+        <p>Cordialement,<br/>L'équipe Visto Fact</p>
+      `,
+    });
   }
 
   /*async signUp(signUpDto: SignUpDto): Promise<{ token: string }> {

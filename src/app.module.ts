@@ -8,6 +8,8 @@ import { AuthModule } from './auth/auth.module';
 import { ClientsModule } from './client/clients.module';
 import { FinancierModule } from './financier/financier.module';
 //import { MailerModule } from '@nestjs-modules/mailer';
+import { ParametrageModule } from './parametrage/parametrage.module';
+import { ServiceModule } from './service/service.module';
 
 @Module({
   imports: [
@@ -24,6 +26,8 @@ import { FinancierModule } from './financier/financier.module';
     AuthModule,
     ClientsModule,
     FinancierModule,
+    ParametrageModule,
+    ServiceModule,
   ],
   controllers: [AppController],
   providers: [AppService],
