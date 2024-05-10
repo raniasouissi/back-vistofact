@@ -100,11 +100,11 @@ export class AuthService {
       subject: 'Définition du mot de passe',
       html: `
         <p>Bonjour ${name},</p>
-        <p>Vous avez demandé à réinitialiser votre mot de passe sur Visto Fact.</p>
+        <p>Vous avez demandé à réinitialiser votre mot de passe sur VBill.</p>
         <p>Veuillez cliquer sur le lien ci-dessous pour définir votre nouveau mot de passe :</p>
         <p><a href="${setPasswordLink}">Définir le mot de passe</a></p>
         <p>Si vous n'avez pas demandé cette réinitialisation, vous pouvez ignorer cet e-mail en toute sécurité.</p>
-        <p>Cordialement,<br/>L'équipe Visto Fact</p>
+        <p>Cordialement,<br/>L'équipe VBill </p>
       `,
     });
   }
@@ -147,7 +147,9 @@ export class AuthService {
 
     return { token };
   }*/
-  async signUp(signUpDto: SignUpDto): Promise<{ token: string }> {
+  async signUp(
+    signUpDto: SignUpDto,
+  ): Promise<{ token: string; reference: string }> {
     const {
       name,
       email,
@@ -158,6 +160,7 @@ export class AuthService {
       phonenumber,
       codepostale,
       matriculeFiscale,
+      namecompany,
     } = signUpDto;
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -172,7 +175,14 @@ export class AuthService {
       100000 + Math.random() * 900000,
     ).toString();
 
-    const client = await this.clientModel.create({
+    // Générer un nombre aléatoire entre 1000 et 9999
+    const randomNumber = Math.floor(Math.random() * 9000) + 1000;
+
+    // Générer la référence en concaténant les trois premières lettres du nom de la société avec le nombre aléatoire
+    const reference =
+      namecompany.substring(0, 3).toUpperCase() + randomNumber.toString();
+
+    await this.clientModel.create({
       name,
       email,
       password: hashedPassword,
@@ -185,23 +195,12 @@ export class AuthService {
       matriculeFiscale,
       verificationCode,
       verificationCodeExpiration: addSeconds(new Date(), 120), // Code expirera dans 60 secondes
+      namecompany,
+      reference,
     });
 
-    await this.sendVerificationEmail(client.email, verificationCode);
-
-    // Attendre la vérification de l'e-mail avant de générer le token
-    const isVerified = await this.verifyAccount(email, verificationCode);
-
-    if (isVerified) {
-      const token = this.jwtService.sign({
-        id: client._id,
-        roles: client.roles,
-      });
-      return { token };
-    } else {
-      // Si la vérification échoue, vous pouvez gérer cela en conséquence
-      throw new Error("Échec de la vérification de l'e-mail.");
-    }
+    // Retourner à la fois le token et la référence
+    return { token: 'token', reference }; // Remplacez 'token' par le token réel que vous générez
   }
 
   async verifyAccount(
@@ -234,7 +233,7 @@ export class AuthService {
       to: email,
       subject: "Vérification d'adresse e-mail",
       html: `
-        <p>Bienvenue sur Visto !</p>
+        <p>Bienvenue sur VBill !</p>
         <p>Veuillez utiliser le code suivant pour vérifier votre adresse e-mail :</p>
         <strong>${verificationCode}</strong>
       `,
@@ -267,7 +266,7 @@ export class AuthService {
     const user = await this.userModel.findOne({ email });
 
     if (!user) {
-      return false;
+      return false; // L'utilisateur n'existe pas
     }
 
     const verificationCode = Math.floor(
@@ -282,8 +281,8 @@ export class AuthService {
 
     await this.mailerService.sendMail({
       to: email,
-      subject: 'Password Reset',
-      html: `<p>Your verification code is: <strong>${verificationCode}</strong></p>`,
+      subject: 'réinitialisation de mot de passe',
+      html: `<p>  Code de vérification : <strong>${verificationCode}</strong></p>`,
     });
 
     return true;
@@ -297,6 +296,32 @@ export class AuthService {
     });
 
     return !!user;
+  }
+
+  async resendPasswordResetCode(email: string): Promise<boolean> {
+    // Générez un nouveau code
+    const newVerificationCode = Math.floor(
+      100000 + Math.random() * 900000,
+    ).toString();
+    const newExpiration = addSeconds(new Date(), 60); // 60 secondes pour le nouveau code
+
+    // Enregistrez le nouveau code et la date d'expiration dans la base de données
+    await this.userModel.updateOne(
+      { email },
+      {
+        resetPasswordCode: newVerificationCode,
+        resetPasswordCodeExpiration: newExpiration,
+      },
+    );
+
+    // Envoyez le nouveau code par e-mail
+    await this.mailerService.sendMail({
+      to: email,
+      subject: 'Nouveau code de réinitialisation de mot de passe',
+      html: `<p>Votre nouveau code de vérification est : <strong>${newVerificationCode}</strong></p>`,
+    });
+
+    return true; // Retourne true car un nouveau code a été envoyé
   }
 
   async resetPassword(email: string, newPassword: string): Promise<boolean> {

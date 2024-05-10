@@ -48,7 +48,7 @@ import {
           },
         },
         defaults: {
-          from: '"Visto Fact" <no-reply@example.com>',
+          from: '"VBill" <no-reply@example.com>',
         },
       }),
       inject: [ConfigService],

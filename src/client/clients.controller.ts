@@ -30,7 +30,6 @@ export class ClientsController {
       throw new Error("Une erreur est survenue lors de l'inscription.");
     }
   }
-
   @Get()
   async findAll() {
     return this.service.getAllClients();

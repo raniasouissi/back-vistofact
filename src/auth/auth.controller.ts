@@ -43,9 +43,9 @@ export class AuthController {
   async signUp(
     @Body() signUpDto: SignUpDto,
     @Res({ passthrough: true }) res: Response,
-  ): Promise<{ token: string }> {
+  ): Promise<{ token: string; reference: string }> {
     try {
-      const { token } = await this.authService.signUp(signUpDto);
+      const { token, reference } = await this.authService.signUp(signUpDto);
 
       const cookieValue = Cookie.serialize('AuthenticationToken', token, {
         httpOnly: true,
@@ -58,7 +58,7 @@ export class AuthController {
       // Set the cookie
       res.setHeader('Set-Cookie', cookieValue);
 
-      return { token };
+      return { token, reference };
     } catch (error) {
       if (error.code === 11000 && error.keyPattern && error.keyPattern.email) {
         // Erreur de clé dupliquée, l'adresse e-mail existe déjà
@@ -144,7 +144,7 @@ export class AuthController {
         message: 'Email de réinitialisation du mot de passe envoyé avec succès',
       };
     } else {
-      return { message: 'Email non trouvé ' };
+      return { message: 'Adresse e-mail non trouvée ' };
     }
   }
   @Post('verify-reset-code')
@@ -159,6 +159,21 @@ export class AuthController {
       return { success: true, message: 'Le code est valide' };
     } else {
       return { success: false, message: 'Code invalide ou expiré' };
+    }
+  }
+
+  @Post('resend-password-reset-code')
+  @HttpCode(200)
+  async resendPasswordResetCode(@Body('email') email: string): Promise<any> {
+    const success = await this.authService.resendPasswordResetCode(email);
+
+    if (success) {
+      return {
+        message:
+          'Un nouveau code de réinitialisation du mot de passe a été envoyé',
+      };
+    } else {
+      return { message: 'Email non trouvé ' };
     }
   }
 

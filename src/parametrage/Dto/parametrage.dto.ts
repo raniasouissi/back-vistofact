@@ -29,7 +29,5 @@ export class ParametrageDto {
   @IsString()
   codePostal: string;
   @IsNotEmpty()
-  @IsString()
-  tva: string;
   phonenumber: string;
 }

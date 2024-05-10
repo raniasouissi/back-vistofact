@@ -46,4 +46,7 @@ export class ClientDto {
   @IsOptional()
   @IsString()
   readonly matriculeFiscale?: string;
+
+  @IsString()
+  readonly namecompany: string;
 }

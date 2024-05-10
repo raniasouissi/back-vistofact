@@ -51,4 +51,7 @@ export class SignUpDto {
   readonly matriculeFiscale?: string;
   @IsEmpty()
   readonly verificationCode: string;
+
+  @IsString()
+  readonly namecompany: string;
 }

@@ -28,6 +28,12 @@ export class Client extends User {
   matriculeFiscale?: string;
   @Prop({ default: null }) // Par défaut, le resetToken est null
   resetToken: string;
+
+  @Prop()
+  namecompany: string; // Nouvel attribut namecompany
+
+  @Prop()
+  reference: string;
 }
 
 export const ClientSchema = SchemaFactory.createForClass(Client);

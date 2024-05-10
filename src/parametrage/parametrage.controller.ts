@@ -42,4 +42,9 @@ export class ParametrageController {
   delete(@Param('id') id: string): Promise<Parametrage> {
     return this.parametrageService.delete(id);
   }
+
+  @Get('search/:query')
+  search(@Param('query') query: string): Promise<Parametrage[]> {
+    return this.parametrageService.searchParametrages(query);
+  }
 }

@@ -5,7 +5,7 @@ export type ParametrageDocument = Parametrage & Document;
 
 @Schema({ timestamps: true })
 export class Parametrage {
-  @Prop({ default: () => new Date().getTime().toString() }) // Utilisation de la date actuelle en millisecondes comme ID
+  @Prop({ default: generateIdentEntreprise }) // Utilisation d'une fonction pour générer l'identifiant d'entreprise
   identreprise: string;
 
   @Prop()
@@ -25,10 +25,19 @@ export class Parametrage {
 
   @Prop()
   codePostal: string;
-  @Prop()
-  tva: string;
+
   @Prop()
   phonenumber: string;
 }
 
 export const ParametrageSchema = SchemaFactory.createForClass(Parametrage);
+
+// Fonction pour générer l'identifiant de l'entreprise
+function generateIdentEntreprise() {
+  const nomEntreprise = this.nomEntreprise;
+  const threeLetters = nomEntreprise.substring(0, 3).toUpperCase();
+  const randomNumber = Math.floor(Math.random() * 1000)
+    .toString()
+    .padStart(3, '0');
+  return `${threeLetters}${randomNumber}`;
+}

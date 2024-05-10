@@ -32,6 +32,7 @@ export class ClientsService {
       phonenumber,
       codepostale,
       matriculeFiscale,
+      namecompany,
     } = signUpDto;
 
     try {
@@ -39,6 +40,12 @@ export class ClientsService {
       if (matriculeFiscale) {
         userType = 'client morale';
       }
+
+      const randomNumber = Math.floor(Math.random() * 9000) + 1000;
+
+      // Générer la référence en concaténant les trois premières lettres du nom de la société avec le nombre aléatoire
+      const reference =
+        namecompany.substring(0, 3).toUpperCase() + randomNumber.toString();
 
       // Générer un mot de passe temporaire
       const temporaryPassword = randomBytes(8).toString('hex');
@@ -49,7 +56,7 @@ export class ClientsService {
       // Générer un token pour le lien de réinitialisation du mot de passe
       const token = randomBytes(32).toString('hex');
 
-      // Créer le client avec le mot de passe temporaire et le token de réinitialisation
+      // Créer le client avec le mot de passe temporaire, la référence et le token de réinitialisation
       const user = await this.clientModel.create({
         name,
         email,
@@ -61,7 +68,9 @@ export class ClientsService {
         codepostale,
         type: userType,
         matriculeFiscale,
-        resetToken: token, // Enregistrer le token dans la base de données
+        namecompany,
+        reference,
+        resetToken: token,
       });
 
       // Envoyer un e-mail au client avec le lien pour définir le mot de passe

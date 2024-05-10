@@ -10,6 +10,10 @@ import { FinancierModule } from './financier/financier.module';
 //import { MailerModule } from '@nestjs-modules/mailer';
 import { ParametrageModule } from './parametrage/parametrage.module';
 import { ServiceModule } from './service/service.module';
+import { TvaModule } from './tva/tva.module';
+import { TimbreModule } from './timbre/timbre.module';
+import { CategorieModule } from './categorie/categorie.module';
+import { DeviseModule } from './devise/devise.module';
 
 @Module({
   imports: [
@@ -28,6 +32,10 @@ import { ServiceModule } from './service/service.module';
     FinancierModule,
     ParametrageModule,
     ServiceModule,
+    TvaModule,
+    TimbreModule,
+    CategorieModule,
+    DeviseModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -1,20 +1,20 @@
 // service.module.ts
-
 import { Module } from '@nestjs/common';
-import { ServiceService } from './service.service';
-import { ServiceController } from './service.controller';
 import { MongooseModule } from '@nestjs/mongoose';
-import { Service, ServiceSchema } from './models/service.models';
+import { ServicesController } from './service.controller';
+import { ServicesService } from './service.service';
+import { Service, ServiceSchema } from './models/service.model';
 import { Client, ClientSchema } from 'src/client/models/clients.models';
-
+import { Tva, TvaSchema } from 'src/tva/models/tva.model';
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: Service.name, schema: ServiceSchema },
       { name: Client.name, schema: ClientSchema },
+      { name: Tva.name, schema: TvaSchema },
     ]),
   ],
-  providers: [ServiceService],
-  controllers: [ServiceController],
+  controllers: [ServicesController],
+  providers: [ServicesService],
 })
 export class ServiceModule {}
