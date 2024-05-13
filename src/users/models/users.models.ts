@@ -34,10 +34,11 @@ export class User {
   @Prop({ default: null })
   verificationCode: string;
 
-  @Prop({ default: null })
-  verificationCodeExpiration: Date;
   @Prop({ default: false })
   isVerified: boolean;
+
+  @Prop({ default: false }) // Nouvelle propriété pour indiquer si le mot de passe a été mis à jour
+  passwordUpdated: boolean;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

@@ -194,11 +194,13 @@ export class AuthService {
       type: userType,
       matriculeFiscale,
       verificationCode,
-      verificationCodeExpiration: addSeconds(new Date(), 120), // Code expirera dans 60 secondes
+
       namecompany,
       reference,
     });
 
+    // Envoi de l'e-mail de vérification
+    await this.sendVerificationEmail(email, verificationCode);
     // Retourner à la fois le token et la référence
     return { token: 'token', reference }; // Remplacez 'token' par le token réel que vous générez
   }
@@ -207,22 +209,15 @@ export class AuthService {
     email: string,
     verificationCode: string,
   ): Promise<boolean> {
-    const user = await this.clientModel.findOne({
-      email,
-      verificationCode,
-      verificationCodeExpiration: { $gt: new Date() },
-    });
+    const user = await this.userModel.findOne({ email, verificationCode });
 
     if (user) {
       // Marquer l'utilisateur comme vérifié
       user.isVerified = true;
       await user.save();
       return true;
-    } else {
-      // Supprimer le compte si la vérification échoue
-      await this.clientModel.deleteOne({ email });
-      return false;
     }
+    return false;
   }
 
   async sendVerificationEmail(

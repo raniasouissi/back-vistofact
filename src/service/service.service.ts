@@ -75,6 +75,36 @@ export class ServicesService {
     return service;
   }
 
+  async update(id: string, updateServiceDto: ServicesDto): Promise<Service> {
+    const { clientId, tvaId, categoriesId, deviseId, ...serviceData } =
+      updateServiceDto;
+
+    const service = await this.serviceModel.findById(id);
+    if (!service) {
+      throw new NotFoundException('Service not found');
+    }
+
+    const clientExists = await this.clientModel.exists({ _id: clientId });
+    if (!clientExists) {
+      throw new NotFoundException('Client not found');
+    }
+
+    const client = await this.clientModel.findById(clientId);
+    if (!client) {
+      throw new NotFoundException('Client not found');
+    }
+
+    service.set({
+      ...serviceData,
+      client: client._id,
+      tva: tvaId,
+      categories: categoriesId,
+      devise: deviseId,
+    });
+
+    return await service.save();
+  }
+
   async delete(id: string): Promise<void> {
     const service = await this.serviceModel.findByIdAndDelete(id);
     if (!service) {

@@ -10,6 +10,8 @@ import {
   UsePipes,
   ValidationPipe,
   NotFoundException,
+  BadRequestException,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UserDto } from './Dto/users.dto';
@@ -62,10 +64,14 @@ export class UsersController {
         error,
       );
       if (error instanceof NotFoundException) {
-        throw new NotFoundException(error.message);
+        throw new NotFoundException('Token de réinitialisation invalide');
+      } else if (error instanceof BadRequestException) {
+        throw new BadRequestException(
+          'Le mot de passe a déjà été modifié. Vous ne pouvez pas réinitialiser le mot de passe.',
+        );
       } else {
-        throw new Error(
-          'Une erreur est survenue lors de la réinitialisation du mot de passe.',
+        throw new InternalServerErrorException(
+          'Le mot de passe a déjà été modifié. Vous ne pouvez pas réinitialiser le mot de passe.',
         );
       }
     }
