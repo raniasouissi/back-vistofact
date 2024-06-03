@@ -49,4 +49,6 @@ export class ClientDto {
 
   @IsString()
   readonly namecompany: string;
+
+  readonly status?: boolean = true;
 }

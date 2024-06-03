@@ -1,30 +1,44 @@
-import { IsString, IsNumber, IsMongoId, IsNotEmpty } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
+import {
+  IsString,
+  IsNumber,
+  IsMongoId,
+  IsNotEmpty,
+  IsOptional,
+} from 'class-validator';
 
 export class ServicesDto {
   @IsString()
   @IsNotEmpty()
+  @ApiProperty()
   libelle: string;
+  @ApiProperty()
+  @IsString()
   reference: string;
-
-  @IsNumber()
-  quantite: number;
-
+  @ApiProperty()
   @IsNumber()
   prix_unitaire: number;
-  montant_HT: number;
-  montant_TTC: number;
+  montant_ht: number;
+  @ApiProperty()
+  @IsNumber()
+  @IsOptional()
+  remise?: number = null; // Remise par défaut à null
+  @ApiProperty()
+  @IsNumber()
+  @IsOptional()
+  quantite?: number = null; // Quantité par défaut à null
+  @ApiProperty()
   @IsMongoId()
   @IsNotEmpty()
-  clientId: string;
-
-  @IsNotEmpty()
-  tvaId: string;
-
+  deviseId?: string = null;
+  @ApiProperty()
   @IsMongoId()
   @IsNotEmpty()
-  deviseId: string;
-
+  categoriesId?: string = null;
+  @ApiProperty()
   @IsMongoId()
-  @IsNotEmpty()
-  categoriesId: string;
+  @IsOptional()
+  tvaId?: string = null; // TVA par défaut à null
+
+  readonly status: boolean = true;
 }

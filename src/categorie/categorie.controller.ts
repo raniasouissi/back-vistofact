@@ -8,10 +8,13 @@ import {
   Body,
   HttpException,
   HttpStatus,
+  UseGuards,
 } from '@nestjs/common';
 import { CategorieService } from './categorie.service';
 import { CreateCategorieDto, UpdateCategorieDto } from './dto/categorie.dto';
 import { Categorie } from './models/categorie.model';
+import { JwtAuthGuard } from 'src/auth/authtoken';
+import { AuthGuard } from '@nestjs/passport';
 
 @Controller('categorie')
 export class CategorieController {
@@ -77,7 +80,7 @@ export class CategorieController {
       );
     }
   }
-
+  @UseGuards(AuthGuard('jwt'))
   @Delete(':id')
   async deleteCategorie(@Param('id') id: string): Promise<void> {
     try {
@@ -89,5 +92,10 @@ export class CategorieController {
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
+  }
+  @UseGuards(JwtAuthGuard) // Utilisez le JwtAuthGuard pour protéger cette route
+  @Get('search/:query')
+  async searchCategories(@Param('query') query: string): Promise<Categorie[]> {
+    return this.categorieService.searchCategories(query);
   }
 }

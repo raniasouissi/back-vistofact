@@ -52,8 +52,16 @@ export class AuthService {
   async signUpWithGeneratedPassword(
     signUpDto: SignupWithGpDto,
   ): Promise<{ message: string; result: any }> {
-    const { name, email, phonenumber, roles, codepostale, address, pays } =
-      signUpDto;
+    const {
+      name,
+      email,
+      phonenumber,
+      roles,
+      codepostale,
+      address,
+      pays,
+      status,
+    } = signUpDto;
 
     try {
       const temporaryPassword = randomBytes(8).toString('hex');
@@ -74,6 +82,7 @@ export class AuthService {
         address,
         pays,
         resetToken: token,
+        status,
       });
       await this.sendSetPasswordEmail(email, token, name);
 
@@ -161,6 +170,7 @@ export class AuthService {
       codepostale,
       matriculeFiscale,
       namecompany,
+      status,
     } = signUpDto;
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -194,9 +204,10 @@ export class AuthService {
       type: userType,
       matriculeFiscale,
       verificationCode,
-
+      verificationCodeCreatedAt: new Date(),
       namecompany,
       reference,
+      status,
     });
 
     // Envoi de l'e-mail de vérification
@@ -212,10 +223,20 @@ export class AuthService {
     const user = await this.userModel.findOne({ email, verificationCode });
 
     if (user) {
-      // Marquer l'utilisateur comme vérifié
-      user.isVerified = true;
-      await user.save();
-      return true;
+      // Vérifier si le code de vérification est encore valide
+      const expirationTime = new Date(user.verificationCodeCreatedAt);
+      expirationTime.setMinutes(expirationTime.getMinutes() + 1); // Ajoute 1 minute
+      const currentTime = new Date();
+
+      if (currentTime <= expirationTime) {
+        // Marquer l'utilisateur comme vérifié
+        user.isVerified = true;
+        await user.save();
+        return true;
+      } else {
+        // Code de vérification expiré
+        return false;
+      }
     }
     return false;
   }
@@ -234,6 +255,41 @@ export class AuthService {
       `,
     });
   }
+
+  async resendVerificationCode(email: string): Promise<void> {
+    const user = await this.userModel.findOne({ email });
+
+    if (user) {
+      const currentTime = new Date();
+      const lastVerificationCodeTime = new Date(user.verificationCodeCreatedAt);
+      lastVerificationCodeTime.setMinutes(
+        lastVerificationCodeTime.getMinutes() + 1,
+      ); // Ajoute 1 minute
+      const timeDifference =
+        currentTime.getTime() - lastVerificationCodeTime.getTime();
+
+      // Vérifie si le temps écoulé depuis le dernier code est supérieur à 1 minute
+      if (timeDifference > 0) {
+        // Générer un nouveau code de vérification
+        const verificationCode = Math.floor(
+          100000 + Math.random() * 900000,
+        ).toString();
+
+        // Mettre à jour le code de vérification dans la base de données
+        user.verificationCode = verificationCode;
+        user.verificationCodeCreatedAt = new Date();
+        await user.save();
+
+        // Envoyer le nouveau code de vérification par e-mail
+        await this.sendVerificationEmail(email, verificationCode);
+      } else {
+        throw new Error(
+          "Le temps d'attente pour renvoyer le code n'est pas écoulé.",
+        );
+      }
+    }
+  }
+
   async login(loginDto: LoginDto): Promise<{ token: string; user: User }> {
     const { email, password } = loginDto;
 

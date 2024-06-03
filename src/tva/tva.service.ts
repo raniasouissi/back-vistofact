@@ -18,7 +18,7 @@ export class TvaService {
 
   async createTva(createTvaDto: UpdateTvaDto): Promise<Tva> {
     try {
-      const { title, rate } = createTvaDto;
+      const { rate } = createTvaDto;
 
       // Vérifier si une TVA avec la même valeur existe déjà
       const existingTva = await this.tvaModel.findOne({ rate }).exec();
@@ -27,7 +27,7 @@ export class TvaService {
       }
 
       // Créer une nouvelle instance de Tva avec les valeurs formatées
-      const createdTva = new this.tvaModel({ title, rate });
+      const createdTva = new this.tvaModel({ rate });
 
       // Sauvegarder et retourner le résultat
       return await createdTva.save();

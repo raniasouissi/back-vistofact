@@ -22,6 +22,7 @@ export class ClientsService {
 
   async signUpClient(
     signUpDto: ClientDto,
+    image: string,
   ): Promise<{ message: string; result: any }> {
     const {
       name,
@@ -33,6 +34,7 @@ export class ClientsService {
       codepostale,
       matriculeFiscale,
       namecompany,
+      status,
     } = signUpDto;
 
     try {
@@ -42,22 +44,13 @@ export class ClientsService {
       }
 
       const randomNumber = Math.floor(Math.random() * 9000) + 1000;
-
-      // Générer la référence en concaténant les trois premières lettres du nom de la société avec le nombre aléatoire
       const reference =
         namecompany.substring(0, 3).toUpperCase() + randomNumber.toString();
-
-      // Générer un mot de passe temporaire
       const temporaryPassword = randomBytes(8).toString('hex');
-
-      // Hacher le mot de passe temporaire
       const hashedPassword = await bcrypt.hash(temporaryPassword, 10);
-
-      // Générer un token pour le lien de réinitialisation du mot de passe
       const token = randomBytes(32).toString('hex');
 
-      // Créer le client avec le mot de passe temporaire, la référence et le token de réinitialisation
-      const user = await this.clientModel.create({
+      const userData = {
         name,
         email,
         password: hashedPassword,
@@ -71,9 +64,12 @@ export class ClientsService {
         namecompany,
         reference,
         resetToken: token,
-      });
+        image,
+        status,
+      };
 
-      // Envoyer un e-mail au client avec le lien pour définir le mot de passe
+      const user = await this.clientModel.create(userData);
+
       await this.sendSetPasswordEmail(email, token, name);
 
       return {
@@ -117,7 +113,11 @@ export class ClientsService {
     return this.clientModel.findOne({ _id: id });
   }
 
-  async updateClient(id: string, body: ClientDto): Promise<string> {
+  async updateClient(
+    id: string,
+    body: ClientDto,
+    image: string,
+  ): Promise<string> {
     const client = await this.clientModel.findById(id).exec();
 
     if (!client) {
@@ -126,6 +126,13 @@ export class ClientsService {
 
     // Mettre à jour tous les champs du client avec les valeurs du corps de la requête
     Object.assign(client, body);
+
+    // Mettre à jour l'image si elle est fournie
+    if (image) {
+      // Vous pouvez traiter l'image de la même manière que dans la méthode signUpClient
+      // Assurez-vous de stocker l'image correctement et de gérer les erreurs si nécessaire
+      client.image = image;
+    }
 
     await client.save();
 

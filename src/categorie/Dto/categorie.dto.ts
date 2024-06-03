@@ -16,4 +16,6 @@ export class UpdateCategorieDto {
 
   @IsString()
   description: string;
+
+  readonly status: boolean = true;
 }

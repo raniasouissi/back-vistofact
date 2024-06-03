@@ -3,51 +3,30 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Service, ServiceDocument } from './models/service.model';
 import { ServicesDto } from './Dto/service.dto';
-import { Client } from '../client/models/clients.models';
 
 @Injectable()
 export class ServicesService {
   private sequenceNumbers: { [key: string]: number } = {};
   constructor(
     @InjectModel(Service.name) private serviceModel: Model<ServiceDocument>,
-    @InjectModel(Client.name) private clientModel: Model<Client>,
   ) {}
 
   async create(createServiceDto: ServicesDto): Promise<Service> {
-    // Vérifie si le client existe
-    const clientExists = await this.clientModel.exists({
-      _id: createServiceDto.clientId,
-    });
-    if (!clientExists) {
-      throw new NotFoundException('Client not found');
-    }
-
-    // Récupère le client à partir de l'ID
-    const client = await this.clientModel.findById(createServiceDto.clientId);
-    if (!client) {
-      throw new NotFoundException('Client not found');
-    }
-
     const {
       reference,
       libelle,
-      quantite,
+
       prix_unitaire,
-      tvaId,
-      montant_HT,
-      montant_TTC,
+
       categoriesId,
       deviseId,
     } = createServiceDto;
     const newService = new this.serviceModel({
       reference,
       libelle,
-      quantite,
+
       prix_unitaire,
-      montant_TTC,
-      montant_HT,
-      client: client._id,
-      tva: tvaId,
+
       categories: categoriesId,
       devise: deviseId,
     });
@@ -59,10 +38,9 @@ export class ServicesService {
   async findAll(): Promise<ServicesDto[]> {
     const services = await this.serviceModel
       .find()
-      .populate('client')
-      .populate('tva')
       .populate('categories')
       .populate('devise')
+      .populate('tva')
       .exec();
     return services.map((service) => service.toObject());
   }
@@ -76,28 +54,16 @@ export class ServicesService {
   }
 
   async update(id: string, updateServiceDto: ServicesDto): Promise<Service> {
-    const { clientId, tvaId, categoriesId, deviseId, ...serviceData } =
-      updateServiceDto;
+    const { categoriesId, deviseId, ...serviceData } = updateServiceDto;
 
     const service = await this.serviceModel.findById(id);
     if (!service) {
       throw new NotFoundException('Service not found');
     }
 
-    const clientExists = await this.clientModel.exists({ _id: clientId });
-    if (!clientExists) {
-      throw new NotFoundException('Client not found');
-    }
-
-    const client = await this.clientModel.findById(clientId);
-    if (!client) {
-      throw new NotFoundException('Client not found');
-    }
-
     service.set({
       ...serviceData,
-      client: client._id,
-      tva: tvaId,
+
       categories: categoriesId,
       devise: deviseId,
     });
@@ -110,5 +76,41 @@ export class ServicesService {
     if (!service) {
       throw new NotFoundException('Service not found');
     }
+  }
+  async searchServices(query: string): Promise<Service[]> {
+    try {
+      if (!query) {
+        return null; // Ou renvoyez une liste vide selon votre logique
+      }
+      const services = await this.serviceModel
+        .find({
+          $or: [
+            { reference: { $regex: query, $options: 'i' } },
+            { libelle: { $regex: query, $options: 'i' } },
+          ],
+        })
+        .exec();
+      return services;
+    } catch (error) {
+      console.error('Erreur lors de la recherche des services :', error);
+      throw new Error(
+        'Une erreur est survenue lors de la recherche des services.',
+      );
+    }
+  }
+
+  //pour facutre
+  async updateService(
+    id: string,
+    updateServiceDto: Partial<ServicesDto>,
+  ): Promise<Service> {
+    const service = await this.serviceModel.findById(id);
+    if (!service) {
+      throw new NotFoundException('Service not found');
+    }
+
+    Object.assign(service, updateServiceDto);
+
+    return await service.save();
   }
 }

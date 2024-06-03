@@ -12,8 +12,7 @@ import { Roles } from '../enum';
 
 export class SignUpDto {
   @IsArray()
-  @IsNotEmpty()
-  readonly roles: Roles[];
+  readonly roles?: Roles[];
 
   @IsOptional()
   @IsString()
@@ -31,10 +30,9 @@ export class SignUpDto {
   @IsString()
   readonly phonenumber?: string;
 
-  @IsNotEmpty()
   @IsString()
   @MinLength(3, { message: 'Le nom doit contenir au moins 3 caractères' })
-  readonly name: string;
+  readonly name?: string;
 
   @IsNotEmpty()
   @IsEmail({}, { message: 'Veuillez saisir une adresse e-mail correcte' })
@@ -45,13 +43,19 @@ export class SignUpDto {
   @MinLength(8, {
     message: 'Le mot de passe doit contenir au moins 8 caractères',
   })
-  readonly password: string;
+  readonly password?: string;
+
   @IsOptional()
   @IsString()
   readonly matriculeFiscale?: string;
+
   @IsEmpty()
   readonly verificationCode: string;
 
+  readonly verificationCodeCreatedAt?: string;
+
   @IsString()
-  readonly namecompany: string;
+  readonly namecompany?: string;
+
+  readonly status: boolean = true;
 }

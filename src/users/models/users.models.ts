@@ -30,8 +30,6 @@ export class User {
   resetPasswordCodeExpiration: Date;
 
   @Prop({ default: null })
-  temporaryPassword: string;
-  @Prop({ default: null })
   verificationCode: string;
 
   @Prop({ default: false })
@@ -39,6 +37,11 @@ export class User {
 
   @Prop({ default: false }) // Nouvelle propriété pour indiquer si le mot de passe a été mis à jour
   passwordUpdated: boolean;
+  @Prop({ default: true })
+  status: boolean;
+
+  @Prop({ type: Date, default: Date.now })
+  verificationCodeCreatedAt: Date;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

@@ -3,10 +3,6 @@ import { IsNotEmpty, IsString } from 'class-validator';
 export class ParametrageDto {
   @IsNotEmpty()
   @IsString()
-  identreprise: string; // Laisser vide dans la DTO, MongoDB se chargera de le générer automatiquement
-
-  @IsNotEmpty()
-  @IsString()
   matriculefiscal: string;
 
   @IsNotEmpty()
@@ -30,4 +26,6 @@ export class ParametrageDto {
   codePostal: string;
   @IsNotEmpty()
   phonenumber: string;
+
+  readonly status: boolean = true;
 }

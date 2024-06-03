@@ -28,6 +28,9 @@ export class Parametrage {
 
   @Prop()
   phonenumber: string;
+
+  @Prop({ default: true })
+  status: boolean;
 }
 
 export const ParametrageSchema = SchemaFactory.createForClass(Parametrage);

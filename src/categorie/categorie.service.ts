@@ -38,4 +38,26 @@ export class CategorieService {
   async deleteCategorie(id: string): Promise<void> {
     await this.categorieModel.findByIdAndDelete(id).exec();
   }
+
+  async searchCategories(query: string): Promise<Categorie[]> {
+    try {
+      if (!query) {
+        return null; // Ou renvoyez une liste vide selon votre logique
+      }
+      const categories = await this.categorieModel
+        .find({
+          $or: [
+            { titre: { $regex: query, $options: 'i' } },
+            { description: { $regex: query, $options: 'i' } },
+          ],
+        })
+        .exec();
+      return categories;
+    } catch (error) {
+      console.error('Erreur lors de la recherche des catégories :', error);
+      throw new Error(
+        'Une erreur est survenue lors de la recherche des catégories.',
+      );
+    }
+  }
 }

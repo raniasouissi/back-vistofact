@@ -7,6 +7,7 @@ import {
   Param,
   Put,
   Delete,
+  Patch,
 } from '@nestjs/common';
 import { ServicesService } from './service.service';
 import { ServicesDto } from './Dto/service.dto';
@@ -39,5 +40,18 @@ export class ServicesController {
   @Delete(':id')
   async delete(@Param('id') id: string) {
     return this.servicesService.delete(id);
+  }
+
+  @Get('search/:query')
+  async searchServices(@Param('query') query: string): Promise<Service[]> {
+    return this.servicesService.searchServices(query);
+  }
+
+  @Patch(':id')
+  async updateService(
+    @Param('id') id: string,
+    @Body() updateServiceDto: Partial<ServicesDto>,
+  ) {
+    return this.servicesService.updateService(id, updateServiceDto);
   }
 }

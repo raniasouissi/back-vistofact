@@ -19,12 +19,15 @@ import { Response } from 'express';
 import * as Cookie from 'cookie';
 import { User } from 'src/users/models/users.models';
 import { SignupWithGpDto } from './Dto/signupwithgp.dto';
+import { VerifyDto } from './Dto/verif.dto';
+//import { AuthGuard } from '@nestjs/passport';
 
 @Controller('auth')
 export class AuthController {
   res: any;
   constructor(private authService: AuthService) {}
 
+  //d @UseGuards(AuthGuard('jwt'))
   @UsePipes(new ValidationPipe())
   @Post('signup-with-generated-password')
   @HttpCode(201)
@@ -38,11 +41,13 @@ export class AuthController {
       result,
     };
   }
+
   @UsePipes(new ValidationPipe())
   @Post('signup')
   async signUp(
     @Body() signUpDto: SignUpDto,
-    @Res({ passthrough: true }) res: Response,
+    @Res({ passthrough: true })
+    res: Response,
   ): Promise<{ token: string; reference: string }> {
     try {
       const { token, reference } = await this.authService.signUp(signUpDto);
@@ -78,9 +83,9 @@ export class AuthController {
 
   @Post('verify')
   async verifyAccount(
-    @Body() signUpDto: SignUpDto,
+    @Body() Verifydto: VerifyDto,
   ): Promise<{ success: boolean; message?: string }> {
-    const { email, verificationCode } = signUpDto;
+    const { email, verificationCode } = Verifydto;
 
     const isVerified = await this.authService.verifyAccount(
       email,
@@ -92,7 +97,24 @@ export class AuthController {
     } else {
       return {
         success: false,
-        message: "L'inscription a échoué. Veuillez réessayer.",
+        message:
+          'Le code de vérification est incorrect ou a expiré. Veuillez réessayer.',
+      };
+    }
+  }
+
+  @Post('resend-verification-code')
+  async resendVerificationCode(
+    @Body('email') email: string,
+  ): Promise<{ success: boolean; message?: string }> {
+    try {
+      await this.authService.resendVerificationCode(email);
+      return { success: true };
+    } catch (error) {
+      return {
+        success: false,
+        message:
+          "Une erreur s'est produite lors de l'envoi du code de vérification.",
       };
     }
   }
@@ -101,19 +123,8 @@ export class AuthController {
   @Post('login')
   async login(
     @Body() loginDto: LoginDto,
-    @Res({ passthrough: true }) res: Response,
   ): Promise<{ token: string; user: User }> {
     const { token, user } = await this.authService.login(loginDto);
-
-    const cookieValue = Cookie.serialize('AuthenticationToken', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 3600,
-      path: '/',
-    });
-
-    res.setHeader('Set-Cookie', cookieValue);
 
     return { token, user };
   }

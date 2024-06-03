@@ -34,6 +34,9 @@ export class Client extends User {
 
   @Prop()
   reference: string;
+
+  @Prop({ default: null })
+  image: string;
 }
 
 export const ClientSchema = SchemaFactory.createForClass(Client);

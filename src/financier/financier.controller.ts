@@ -13,6 +13,7 @@ import {
 import { FinancierService } from './financier.service'; // Assurez-vous que le nom du service est correct
 import { Financier } from './models/financier.models';
 import { FinancierDto } from './Dto/financier.dto';
+import { ApiBody } from '@nestjs/swagger';
 
 @Controller('financiers')
 export class FinancierController {
@@ -28,6 +29,7 @@ export class FinancierController {
     return this.financierService.findOne(id);
   }
   @UsePipes(new ValidationPipe())
+  @ApiBody({ type: FinancierDto })
   @Put('/:id')
   async update(@Param('id') id: string, @Body() financierDto: FinancierDto) {
     return this.financierService.updateFinancier(id, financierDto);

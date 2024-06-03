@@ -7,24 +7,32 @@ import {
   Param,
   Put,
   Delete,
-  ValidationPipe,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
 
 import { ClientDto } from './dto/clients.dto';
 import { ClientsService } from './client.service';
 import { Client } from './models/clients.models';
+//import { MulterFile } from 'multer';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('clients')
 export class ClientsController {
   constructor(private readonly service: ClientsService) {}
 
   @Post('signup')
+  @UseInterceptors(FileInterceptor('image'))
   async signUpClient(
-    @Body(ValidationPipe) signUpDto: ClientDto,
+    @UploadedFile() image: Express.Multer.File,
+    @Body() signUpDto: ClientDto,
   ): Promise<{ message: string; result: any }> {
     try {
-      const result = await this.service.signUpClient(signUpDto);
-      return { message: result.message, result: result.result };
+      const imageUrl = image ? image.filename : '';
+
+      const result = await this.service.signUpClient(signUpDto, imageUrl);
+
+      return result;
     } catch (error) {
       console.error("Erreur lors de l'inscription :", error);
       throw new Error("Une erreur est survenue lors de l'inscription.");
@@ -41,15 +49,21 @@ export class ClientsController {
   }
 
   @Put(':id')
+  @UseInterceptors(FileInterceptor('image'))
   async updateClient(
     @Param('id') id: string,
     @Body() body: ClientDto,
+    @UploadedFile() image: Express.Multer.File,
   ): Promise<string> {
     try {
-      await this.service.updateClient(id, body);
+      const imageUrl = image ? image.filename : ''; // Récupérer le nom du fichier de l'image
+      await this.service.updateClient(id, body, imageUrl);
       return 'Client has been updated successfully';
     } catch (error) {
-      throw new Error(error);
+      console.error('Erreur lors de la mise à jour du client :', error);
+      throw new Error(
+        'Une erreur est survenue lors de la mise à jour du client.',
+      );
     }
   }
 
