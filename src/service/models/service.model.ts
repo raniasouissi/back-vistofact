@@ -34,6 +34,8 @@ export class Service {
 
   @Prop({ default: 0 }) // Montant HT par défaut à null
   montant_ht: number;
+  @Prop({ type: String })
+  unite: string;
 
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Tva', default: null }) // Référence au modèle TVA
   tva: Tva;

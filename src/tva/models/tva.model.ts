@@ -13,6 +13,9 @@ export class Tva {
     get: (value: number) => `${value.toFixed(2)}`,
   })
   rate: number;
+
+  @Prop({ default: true })
+  status: boolean;
 }
 
 export const TvaSchema = SchemaFactory.createForClass(Tva);

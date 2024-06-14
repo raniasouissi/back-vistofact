@@ -4,4 +4,5 @@
 
 export class UpdateTvaDto {
   rate: number;
+  readonly status?: boolean = true;
 }

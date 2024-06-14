@@ -1,5 +1,8 @@
 // auth.service.ts
 import {
+  BadRequestException,
+  HttpException,
+  HttpStatus,
   Injectable,
   NotFoundException,
   UnauthorizedException,
@@ -393,5 +396,53 @@ export class AuthService {
     await user.save();
 
     return true;
+  }
+
+  async changePassword(
+    email: string,
+    oldPassword: string,
+    newPassword: string,
+  ): Promise<{ message: string }> {
+    try {
+      console.log('Changement de mot de passe en cours pour :', email);
+
+      const user = await this.userModel.findOne({ email });
+
+      if (!user) {
+        console.log('Utilisateur non trouvé');
+        throw new NotFoundException('Utilisateur non trouvé');
+      }
+
+      const isPasswordMatched = await bcrypt.compare(
+        oldPassword,
+        user.password,
+      );
+      if (!isPasswordMatched) {
+        console.log('Ancien mot de passe incorrect');
+        throw new UnauthorizedException('Ancien mot de passe incorrect');
+      }
+
+      if (oldPassword === newPassword) {
+        console.log("Le nouveau mot de passe est identique à l'ancien");
+        throw new BadRequestException(
+          "Le nouveau mot de passe ne peut pas être identique à l'ancien",
+        );
+      }
+
+      // Mettre à jour le mot de passe avec le nouveau mot de passe hashé
+      user.password = await bcrypt.hash(newPassword, 10);
+
+      // Sauvegardez les modifications dans la base de données
+      await user.save();
+
+      console.log('Mot de passe modifié avec succès');
+      return { message: 'Mot de passe modifié avec succès' };
+    } catch (error) {
+      console.error('Erreur lors de la modification du mot de passe :', error);
+      throw new HttpException(
+        "Une erreur s'est produite lors de la modification du mot de passe.",
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 }

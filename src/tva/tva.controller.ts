@@ -10,10 +10,13 @@ import {
   Body,
   HttpException,
   HttpStatus,
+  InternalServerErrorException,
+  Patch,
 } from '@nestjs/common';
 import { TvaService } from './tva.service';
 import { UpdateTvaDto } from './Dto/tva.dto';
 import { Tva } from './models/tva.model';
+import { ActivatedTvaDto } from './Dto/ActivatedTva.dto';
 
 @Controller('tva')
 export class TvaController {
@@ -82,6 +85,24 @@ export class TvaController {
     } catch (error) {
       // Si une erreur se produit, renvoyez une réponse d'erreur avec le code d'état approprié
       throw new HttpException('TVA supprimée avec succès', HttpStatus.OK);
+    }
+  }
+
+  @Patch(':id')
+  async activatedTva(
+    @Param('id') id: string,
+    @Body() activatedTvaDto: ActivatedTvaDto,
+  ) {
+    try {
+      const updatedTimbre = await this.tvaService.activatedTva(
+        id,
+        activatedTvaDto,
+      );
+      return updatedTimbre;
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Une erreur est survenue lors de la mise à jour du statut tva : ${error.message}`,
+      );
     }
   }
 }

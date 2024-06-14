@@ -8,6 +8,9 @@ export class Devise {
 
   @Prop({ required: true }) // Ajoutez le champ par défaut pour le taux de change
   symbole: string;
+
+  @Prop({ default: true })
+  status: boolean;
 }
 
 export type DeviseDocument = Devise & Document;

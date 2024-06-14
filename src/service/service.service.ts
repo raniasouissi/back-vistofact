@@ -3,6 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Service, ServiceDocument } from './models/service.model';
 import { ServicesDto } from './Dto/service.dto';
+import { ActivatedServicesDto } from './Dto/activatedservices.dto';
 
 @Injectable()
 export class ServicesService {
@@ -15,6 +16,7 @@ export class ServicesService {
     const {
       reference,
       libelle,
+      unite,
 
       prix_unitaire,
 
@@ -24,6 +26,7 @@ export class ServicesService {
     const newService = new this.serviceModel({
       reference,
       libelle,
+      unite,
 
       prix_unitaire,
 
@@ -77,19 +80,38 @@ export class ServicesService {
       throw new NotFoundException('Service not found');
     }
   }
-  async searchServices(query: string): Promise<Service[]> {
+  async searchServices(
+    query: string,
+    deviseName: string,
+    categorieTitle: string,
+  ): Promise<Service[]> {
     try {
-      if (!query) {
-        return null; // Ou renvoyez une liste vide selon votre logique
+      const searchCriteria: any = {
+        $or: [
+          { reference: { $regex: query, $options: 'i' } },
+          { libelle: { $regex: query, $options: 'i' } },
+        ],
+      };
+
+      if (deviseName) {
+        const devise = await this.serviceModel
+          .findOne({ name: deviseName })
+          .exec();
+        if (devise) {
+          searchCriteria['devise'] = devise._id;
+        }
       }
-      const services = await this.serviceModel
-        .find({
-          $or: [
-            { reference: { $regex: query, $options: 'i' } },
-            { libelle: { $regex: query, $options: 'i' } },
-          ],
-        })
-        .exec();
+
+      if (categorieTitle) {
+        const categorie = await this.serviceModel
+          .findOne({ titre: categorieTitle })
+          .exec();
+        if (categorie) {
+          searchCriteria['categories'] = categorie._id;
+        }
+      }
+
+      const services = await this.serviceModel.find(searchCriteria).exec();
       return services;
     } catch (error) {
       console.error('Erreur lors de la recherche des services :', error);
@@ -100,7 +122,7 @@ export class ServicesService {
   }
 
   //pour facutre
-  async updateService(
+  /*async updateService(
     id: string,
     updateServiceDto: Partial<ServicesDto>,
   ): Promise<Service> {
@@ -112,5 +134,22 @@ export class ServicesService {
     Object.assign(service, updateServiceDto);
 
     return await service.save();
+  }*/
+
+  async activatedServices(
+    id: string,
+    activatedServicesDto: ActivatedServicesDto,
+  ): Promise<Service> {
+    const service = await this.serviceModel.findByIdAndUpdate(
+      id,
+      { status: activatedServicesDto.status },
+      { new: true },
+    );
+    if (!service) {
+      throw new NotFoundException(
+        `La service avec l'ID ${id} n'a pas été trouvée`,
+      );
+    }
+    return service;
   }
 }

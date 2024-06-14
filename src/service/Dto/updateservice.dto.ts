@@ -1,4 +1,10 @@
-import { IsMongoId, IsNumber, IsOptional } from 'class-validator';
+import {
+  IsMongoId,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 
 // Dans votre DTO de mise à jour du service
 export class UpdateServiceDto {
@@ -14,6 +20,10 @@ export class UpdateServiceDto {
   @IsNumber()
   @IsOptional()
   quantite?: number;
+
+  @IsString()
+  @IsNotEmpty()
+  unite?: string;
 
   @IsMongoId()
   @IsOptional()

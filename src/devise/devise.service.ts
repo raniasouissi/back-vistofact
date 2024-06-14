@@ -3,6 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Devise, DeviseDocument } from './models/devise.model';
 import { CreateDeviseDto } from './Dto/devise.dto';
+import { ActivatedDeviseDto } from './Dto/ActivatedDevise.dto';
 
 @Injectable()
 export class DeviseService {
@@ -49,5 +50,22 @@ export class DeviseService {
     if (!devise) {
       throw new NotFoundException('Devise not found');
     }
+  }
+
+  async activatedDevises(
+    id: string,
+    activatedDevisesDto: ActivatedDeviseDto,
+  ): Promise<Devise> {
+    const devise = await this.deviseModel.findByIdAndUpdate(
+      id,
+      { status: activatedDevisesDto.status },
+      { new: true },
+    );
+    if (!devise) {
+      throw new NotFoundException(
+        `La devise avec l'ID ${id} n'a pas été trouvée`,
+      );
+    }
+    return devise;
   }
 }

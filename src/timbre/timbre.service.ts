@@ -3,6 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Timbre, TimbreDocument } from './models/timbre.model';
 import { CreateTimbreDto, UpdateTimbreDto } from './dto/timbre.dto';
+import { ActivatedTimbresDto } from './Dto/ActivatedTimbe.dto';
 
 @Injectable()
 export class TimbreService {
@@ -42,5 +43,21 @@ export class TimbreService {
     if (!timbre) {
       throw new NotFoundException('Timbre not found');
     }
+  }
+  async activatedTimbres(
+    id: string,
+    activatedTimbresDto: ActivatedTimbresDto,
+  ): Promise<Timbre> {
+    const timbre = await this.timbreModel.findByIdAndUpdate(
+      id,
+      { status: activatedTimbresDto.status },
+      { new: true },
+    );
+    if (!timbre) {
+      throw new NotFoundException(
+        `Le timbre avec l'ID ${id} n'a pas été trouvée`,
+      );
+    }
+    return timbre;
   }
 }

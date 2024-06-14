@@ -17,6 +17,8 @@ export class ParametrageDto {
   @IsString()
   adresseEntreprise: string;
 
+  email: string;
+
   @IsNotEmpty()
   @IsString()
   ville: string;

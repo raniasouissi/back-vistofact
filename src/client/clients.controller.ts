@@ -9,6 +9,8 @@ import {
   Delete,
   UseInterceptors,
   UploadedFile,
+  Patch,
+  InternalServerErrorException,
 } from '@nestjs/common';
 
 import { ClientDto } from './dto/clients.dto';
@@ -16,6 +18,7 @@ import { ClientsService } from './client.service';
 import { Client } from './models/clients.models';
 //import { MulterFile } from 'multer';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { ActivatedClientDto } from './Dto/ActivatedClient.dto';
 
 @Controller('clients')
 export class ClientsController {
@@ -82,6 +85,24 @@ export class ClientsController {
       console.error('Erreur lors de la recherche des clients :', error);
       throw new Error(
         'Une erreur est survenue lors de la recherche des clients.',
+      );
+    }
+  }
+
+  @Patch(':id')
+  async activatedClients(
+    @Param('id') id: string,
+    @Body() activatedClientDto: ActivatedClientDto,
+  ) {
+    try {
+      const updatedclient = await this.service.activatedClients(
+        id,
+        activatedClientDto,
+      );
+      return updatedclient;
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Une erreur est survenue lors de la mise à jour du statut timbre : ${error.message}`,
       );
     }
   }

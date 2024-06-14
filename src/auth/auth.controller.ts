@@ -9,6 +9,9 @@ import {
   UsePipes,
   HttpException,
   HttpStatus,
+  NotFoundException,
+  UnauthorizedException,
+  BadRequestException,
 } from '@nestjs/common';
 import { SignUpDto } from './Dto/signup.dto';
 import { LoginDto } from './Dto/login.dto';
@@ -20,6 +23,7 @@ import * as Cookie from 'cookie';
 import { User } from 'src/users/models/users.models';
 import { SignupWithGpDto } from './Dto/signupwithgp.dto';
 import { VerifyDto } from './Dto/verif.dto';
+import { ChangePasswordDto } from './Dto/changePassword.dto';
 //import { AuthGuard } from '@nestjs/passport';
 
 @Controller('auth')
@@ -204,6 +208,37 @@ export class AuthController {
       return {
         message: 'Email invalide ou réinitialisation du mot de passe échouée',
       };
+    }
+  }
+
+  @Post('change-password')
+  async changePassword(
+    @Body() changePasswordDto: ChangePasswordDto,
+  ): Promise<{ message: string }> {
+    try {
+      // Appelez la méthode de service pour modifier le mot de passe
+      await this.authService.changePassword(
+        changePasswordDto.email,
+        changePasswordDto.oldPassword,
+        changePasswordDto.newPassword,
+      );
+
+      return { message: 'Mot de passe modifié avec succès' };
+    } catch (error) {
+      let errorMessage =
+        "Une erreur est survenue lors de la modification du mot de passe. Veuillez vérifier que votre ancien mot de passe est correct et assurez-vous que votre nouveau mot de passe est différent de l'ancien.";
+
+      if (error instanceof NotFoundException) {
+        errorMessage = 'Utilisateur non trouvé';
+      } else if (error instanceof UnauthorizedException) {
+        errorMessage = 'Ancien mot de passe incorrect';
+      } else if (error instanceof BadRequestException) {
+        errorMessage =
+          "Le nouveau mot de passe ne peut pas être identique à l'ancien";
+      }
+
+      // Gérer les erreurs de manière appropriée
+      throw new HttpException(errorMessage, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 }

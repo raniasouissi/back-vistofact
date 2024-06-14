@@ -8,10 +8,13 @@ import {
   Put,
   Delete,
   Patch,
+  InternalServerErrorException,
+  Query,
 } from '@nestjs/common';
 import { ServicesService } from './service.service';
 import { ServicesDto } from './Dto/service.dto';
 import { Service } from './models/service.model';
+import { ActivatedServicesDto } from './Dto/activatedservices.dto';
 
 @Controller('services')
 export class ServicesController {
@@ -43,15 +46,41 @@ export class ServicesController {
   }
 
   @Get('search/:query')
-  async searchServices(@Param('query') query: string): Promise<Service[]> {
-    return this.servicesService.searchServices(query);
+  async searchServices(
+    @Param('query') query: string,
+    @Query('devise') deviseName: string,
+    @Query('categorie') categorieTitle: string,
+  ): Promise<Service[]> {
+    return this.servicesService.searchServices(
+      query,
+      deviseName,
+      categorieTitle,
+    );
   }
 
-  @Patch(':id')
+  /*@Patch(':id')
   async updateService(
     @Param('id') id: string,
     @Body() updateServiceDto: Partial<ServicesDto>,
   ) {
     return this.servicesService.updateService(id, updateServiceDto);
+  }*/
+
+  @Patch(':id')
+  async activatedServices(
+    @Param('id') id: string,
+    @Body() activatedServicesDto: ActivatedServicesDto,
+  ) {
+    try {
+      const updatedService = await this.servicesService.activatedServices(
+        id,
+        activatedServicesDto,
+      );
+      return updatedService;
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Une erreur est survenue lors de la mise à jour du statut de la service : ${error.message}`,
+      );
+    }
   }
 }

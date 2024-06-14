@@ -38,7 +38,11 @@ export class ServicesDto {
   @ApiProperty()
   @IsMongoId()
   @IsOptional()
-  tvaId?: string = null; // TVA par défaut à null
+  tva?: string = null; // TVA par défaut à null
+
+  @IsString()
+  @IsNotEmpty()
+  unite: string;
 
   readonly status: boolean = true;
 }

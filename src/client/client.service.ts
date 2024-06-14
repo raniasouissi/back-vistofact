@@ -8,6 +8,7 @@ import { MailerService } from '@nestjs-modules/mailer';
 import { randomBytes } from 'crypto';
 import * as bcrypt from 'bcrypt';
 import { User } from 'src/users/models/users.models';
+import { ActivatedClientDto } from './Dto/ActivatedClient.dto';
 
 //import { Roles } from '../enum';
 @Injectable()
@@ -106,11 +107,42 @@ export class ClientsService {
   }
 
   async getAllClients(): Promise<Client[]> {
-    return await this.clientModel.find({ roles: 'client' }).exec();
+    try {
+      return await this.clientModel
+        .find({ roles: 'client' })
+        .populate('factures')
+        .exec();
+    } catch (error) {
+      // Gérer les erreurs ici
+      console.error(
+        'Erreur lors de la récupération des clients avec les factures peuplées :',
+        error,
+      );
+      throw error;
+    }
   }
 
-  FindOne(id: string) {
-    return this.clientModel.findOne({ _id: id });
+  async FindOne(id: string): Promise<Client> {
+    try {
+      return await this.clientModel
+        .findOne({ _id: id })
+        .populate({
+          path: 'factures',
+          populate: [
+            { path: 'services', populate: { path: 'tva' } },
+            { path: 'timbre' },
+            { path: 'parametrage' },
+            { path: 'client' },
+          ],
+        })
+        .exec();
+    } catch (error) {
+      console.error(
+        'Erreur lors de la récupération du client avec les factures et les relations peuplées :',
+        error,
+      );
+      throw error;
+    }
   }
 
   async updateClient(
@@ -172,5 +204,22 @@ export class ClientsService {
         'Une erreur est survenue lors de la recherche des clients.',
       );
     }
+  }
+
+  async activatedClients(
+    id: string,
+    activatedClientDto: ActivatedClientDto,
+  ): Promise<Client> {
+    const client = await this.clientModel.findByIdAndUpdate(
+      id,
+      { status: activatedClientDto.status },
+      { new: true },
+    );
+    if (!client) {
+      throw new NotFoundException(
+        `Le client avec l'ID ${id} n'a pas été trouvée`,
+      );
+    }
+    return client;
   }
 }

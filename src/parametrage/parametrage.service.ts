@@ -3,6 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Parametrage, ParametrageDocument } from './models/parametrage.model';
 import { ParametrageDto } from './Dto/parametrage.dto';
+import { ActivatedParametragesDto } from './Dto/ActivatedParmetrage.dto';
 
 @Injectable()
 export class ParametrageService {
@@ -76,5 +77,22 @@ export class ParametrageService {
         'Une erreur est survenue lors de la recherche des parametrages.',
       );
     }
+  }
+
+  async activatedParametrages(
+    id: string,
+    activatedParametragesDto: ActivatedParametragesDto,
+  ): Promise<Parametrage> {
+    const parametrage = await this.parametrageModel.findByIdAndUpdate(
+      id,
+      { status: activatedParametragesDto.status },
+      { new: true },
+    );
+    if (!parametrage) {
+      throw new NotFoundException(
+        `Le  parametrage avec l'ID ${id} n'a pas été trouvée`,
+      );
+    }
+    return parametrage;
   }
 }

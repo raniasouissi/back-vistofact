@@ -7,6 +7,8 @@ export type TimbreDocument = Timbre & Document;
 export class Timbre {
   @Prop()
   value: number;
+  @Prop({ default: true })
+  status: boolean;
 }
 
 export const TimbreSchema = SchemaFactory.createForClass(Timbre);

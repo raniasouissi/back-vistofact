@@ -14,6 +14,8 @@ import { TimbreModule } from './timbre/timbre.module';
 import { CategorieModule } from './categorie/categorie.module';
 import { DeviseModule } from './devise/devise.module';
 import { FactureModule } from './facture/facture.module';
+import { PaiementModule } from './paiement/paiement.module';
+import { EcheanceModule } from './echeance/echeance.module';
 
 @Module({
   imports: [
@@ -33,6 +35,8 @@ import { FactureModule } from './facture/facture.module';
     CategorieModule,
     DeviseModule,
     FactureModule,
+    PaiementModule,
+    EcheanceModule,
   ],
   controllers: [AppController],
   providers: [AppService],

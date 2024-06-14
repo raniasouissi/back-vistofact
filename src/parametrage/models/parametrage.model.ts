@@ -29,6 +29,9 @@ export class Parametrage {
   @Prop()
   phonenumber: string;
 
+  @Prop({ unique: [true, 'Duplicate email entered'] })
+  email: string;
+
   @Prop({ default: true })
   status: boolean;
 }

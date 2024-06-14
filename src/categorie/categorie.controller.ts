@@ -9,12 +9,15 @@ import {
   HttpException,
   HttpStatus,
   UseGuards,
+  Patch,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { CategorieService } from './categorie.service';
 import { CreateCategorieDto, UpdateCategorieDto } from './dto/categorie.dto';
 import { Categorie } from './models/categorie.model';
 import { JwtAuthGuard } from 'src/auth/authtoken';
-import { AuthGuard } from '@nestjs/passport';
+//import { AuthGuard } from '@nestjs/passport';
+import { ActivatedCategoriesDto } from './Dto/activatedCategories.dto';
 
 @Controller('categorie')
 export class CategorieController {
@@ -80,7 +83,7 @@ export class CategorieController {
       );
     }
   }
-  @UseGuards(AuthGuard('jwt'))
+
   @Delete(':id')
   async deleteCategorie(@Param('id') id: string): Promise<void> {
     try {
@@ -97,5 +100,23 @@ export class CategorieController {
   @Get('search/:query')
   async searchCategories(@Param('query') query: string): Promise<Categorie[]> {
     return this.categorieService.searchCategories(query);
+  }
+
+  @Patch(':id')
+  async activatedCategories(
+    @Param('id') id: string,
+    @Body() activatedCategoriesDto: ActivatedCategoriesDto,
+  ) {
+    try {
+      const updatedCategory = await this.categorieService.activatedCategories(
+        id,
+        activatedCategoriesDto,
+      );
+      return updatedCategory;
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Une erreur est survenue lors de la mise à jour du statut de la catégorie : ${error.message}`,
+      );
+    }
   }
 }

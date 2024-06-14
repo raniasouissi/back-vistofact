@@ -8,10 +8,13 @@ import {
   Body,
   HttpException,
   HttpStatus,
+  InternalServerErrorException,
+  Patch,
 } from '@nestjs/common';
 import { TimbreService } from './timbre.service';
 import { CreateTimbreDto, UpdateTimbreDto } from './dto/timbre.dto';
 import { Timbre } from './models/timbre.model';
+import { ActivatedTimbresDto } from './Dto/ActivatedTimbe.dto';
 
 @Controller('timbre')
 export class TimbreController {
@@ -73,6 +76,24 @@ export class TimbreController {
       return;
     } catch (error) {
       throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  @Patch(':id')
+  async activatedTimbre(
+    @Param('id') id: string,
+    @Body() activatedTimbresDto: ActivatedTimbresDto,
+  ) {
+    try {
+      const updatedTimbre = await this.timbreService.activatedTimbres(
+        id,
+        activatedTimbresDto,
+      );
+      return updatedTimbre;
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Une erreur est survenue lors de la mise à jour du statut timbre : ${error.message}`,
+      );
     }
   }
 }

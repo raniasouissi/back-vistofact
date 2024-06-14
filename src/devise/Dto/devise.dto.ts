@@ -1,4 +1,5 @@
 export class CreateDeviseDto {
   readonly name: string;
-  readonly tauxChange: number;
+
+  readonly status?: boolean = true;
 }

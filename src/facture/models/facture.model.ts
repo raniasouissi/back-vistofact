@@ -72,6 +72,29 @@ export class Facture {
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Parametrage' })
   parametrage: mongoose.Schema.Types.ObjectId;
 
+  @Prop({ type: Date })
+  dateEcheance: Date;
+
+  @Prop({ type: String, default: ' En attente' }) // Valeur par défaut pour statusDelai
+  statusDelai: string;
+  @Prop({ type: String, default: 'Non payé' }) // Valeur par défaut pour statusDelai
+  etatpaiement: string;
+
+  @Prop({ type: Number, default: null }) // Valeur par défaut pour montantPaye
+  montantPaye: number;
+
+  @Prop({ type: Number, default: null }) // Valeur par défaut pour montantRestant
+  montantRestant: number;
+
+  @Prop({ type: Number }) // Valeur par défaut pour montantRestant
+  delai: number;
+
+  @Prop({ type: Number, default: null }) // Valeur par défaut pour nombreJoursRetard
+  nombreJoursRetard: number;
+
+  @Prop({ type: Date, default: () => new Date() }) // Valeur par défaut pour datejour
+  datejour: Date;
+
   static async generateNumeroFacture(
     model: Model<FactureDocument>,
   ): Promise<string> {

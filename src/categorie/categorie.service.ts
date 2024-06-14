@@ -1,8 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Categorie, CategorieDocument } from './models/categorie.model';
 import { CreateCategorieDto, UpdateCategorieDto } from './dto/categorie.dto';
+import { ActivatedCategoriesDto } from './Dto/activatedCategories.dto';
 
 @Injectable()
 export class CategorieService {
@@ -59,5 +60,22 @@ export class CategorieService {
         'Une erreur est survenue lors de la recherche des catégories.',
       );
     }
+  }
+
+  async activatedCategories(
+    id: string,
+    activatedCategoriesDto: ActivatedCategoriesDto,
+  ): Promise<Categorie> {
+    const category = await this.categorieModel.findByIdAndUpdate(
+      id,
+      { status: activatedCategoriesDto.status },
+      { new: true },
+    );
+    if (!category) {
+      throw new NotFoundException(
+        `La catégorie avec l'ID ${id} n'a pas été trouvée`,
+      );
+    }
+    return category;
   }
 }

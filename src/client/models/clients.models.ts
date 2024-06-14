@@ -2,6 +2,8 @@ import { User } from 'src/users/models/users.models';
 
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { IsOptional } from 'class-validator';
+import { Facture } from 'src/facture/models/facture.model';
+import mongoose from 'mongoose';
 //import { Document } from 'mongoose';
 //import { Roles } from 'src/auth/enum';
 
@@ -37,6 +39,11 @@ export class Client extends User {
 
   @Prop({ default: null })
   image: string;
+  @Prop({ default: true })
+  status: boolean;
+
+  @Prop({ type: [{ type: mongoose.SchemaTypes.ObjectId, ref: 'Facture' }] })
+  factures: Facture[]; // Référence vers le modèle de facture
 }
 
 export const ClientSchema = SchemaFactory.createForClass(Client);

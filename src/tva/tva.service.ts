@@ -9,6 +9,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Tva, TvaDocument } from './models/tva.model';
 import { UpdateTvaDto } from './dto/tva.dto';
+import { ActivatedTvaDto } from './Dto/ActivatedTva.dto';
 
 @Injectable()
 export class TvaService {
@@ -79,5 +80,20 @@ export class TvaService {
     } catch (error) {
       throw new Error('Échec de la suppression de la TVA');
     }
+  }
+
+  async activatedTva(
+    id: string,
+    activatedTvaDto: ActivatedTvaDto,
+  ): Promise<Tva> {
+    const tva = await this.tvaModel.findByIdAndUpdate(
+      id,
+      { status: activatedTvaDto.status },
+      { new: true },
+    );
+    if (!tva) {
+      throw new NotFoundException(`La tva avec l'ID ${id} n'a pas été trouvée`);
+    }
+    return tva;
   }
 }
