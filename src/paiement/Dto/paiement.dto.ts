@@ -22,11 +22,11 @@ export class PaiementDto {
   @IsDate()
   @IsOptional()
   @Type(() => Date)
-  datepaiement: Date;
+  datepaiement?: Date;
 
   @IsMongoId()
   factures: string;
-
+  @IsOptional()
   @Type(() => EcheanceDto)
-  echeances: EcheanceDto[];
+  echeances?: EcheanceDto[];
 }

@@ -7,12 +7,16 @@ import { FactureController } from './facture.controller';
 import { Facture, FactureSchema } from './models/facture.model';
 
 import { ServicesService } from 'src/service/service.service';
+import { Paiement, PaiementSchema } from 'src/paiement/models/paiement.model';
 
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: Facture.name, schema: FactureSchema }]),
     MongooseModule.forFeature([{ name: Service.name, schema: ServiceSchema }]),
     MongooseModule.forFeature([{ name: Client.name, schema: ClientSchema }]),
+    MongooseModule.forFeature([
+      { name: Paiement.name, schema: PaiementSchema },
+    ]),
   ],
   providers: [FactureService, ServicesService],
   controllers: [FactureController],

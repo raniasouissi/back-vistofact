@@ -10,11 +10,8 @@ export class Echeance {
   @Prop({ type: Number, default: null }) // Montant payé
   montantCheque: number;
 
-  @Prop({ type: Date, default: Date.now }) // Date de paiement
+  @Prop({ type: Date })
   dateCh: Date;
-
-  @Prop({ type: Date, default: null }) // Date d'échéance
-  dateEcheance: Date;
 }
 
 export const EcheanceSchema = SchemaFactory.createForClass(Echeance);

@@ -1,9 +1,7 @@
 import { IsNotEmpty, IsString } from 'class-validator';
 
 export class ParametrageDto {
-  @IsNotEmpty()
-  @IsString()
-  matriculefiscal: string;
+  matriculefiscal?: string;
 
   @IsNotEmpty()
   @IsString()

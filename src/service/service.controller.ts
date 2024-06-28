@@ -21,8 +21,14 @@ export class ServicesController {
   constructor(private readonly servicesService: ServicesService) {}
 
   @Post()
-  async create(@Body() serviceDto: ServicesDto) {
-    return this.servicesService.create(serviceDto);
+  async create(@Body() serviceDto: ServicesDto): Promise<string> {
+    try {
+      await this.servicesService.create(serviceDto);
+      return 'Service ajouté avec succès';
+    } catch (error) {
+      // Gérer les erreurs ici si nécessaire
+      throw new Error("Une erreur s'est produite lors de l'ajout du service.");
+    }
   }
 
   @Get(':id')

@@ -32,10 +32,10 @@ export class User {
   @Prop({ default: null })
   verificationCode: string;
 
-  @Prop({ default: false })
+  @Prop()
   isVerified: boolean;
 
-  @Prop({ default: false }) // Nouvelle propriété pour indiquer si le mot de passe a été mis à jour
+  @Prop({ default: false })
   passwordUpdated: boolean;
   @Prop({ default: true })
   status: boolean;

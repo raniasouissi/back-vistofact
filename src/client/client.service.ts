@@ -9,6 +9,8 @@ import { randomBytes } from 'crypto';
 import * as bcrypt from 'bcrypt';
 import { User } from 'src/users/models/users.models';
 import { ActivatedClientDto } from './Dto/ActivatedClient.dto';
+import * as moment from 'moment'; // Importer moment pour manipuler les dates
+import { Cron, CronExpression } from '@nestjs/schedule'; // Importer Cron pour la planification des tâches
 
 //import { Roles } from '../enum';
 @Injectable()
@@ -67,6 +69,7 @@ export class ClientsService {
         resetToken: token,
         image,
         status,
+        isVerified: true,
       };
 
       const user = await this.clientModel.create(userData);
@@ -133,6 +136,7 @@ export class ClientsService {
             { path: 'timbre' },
             { path: 'parametrage' },
             { path: 'client' },
+            { path: 'paiemnts', populate: { path: 'echeances' } },
           ],
         })
         .exec();
@@ -221,5 +225,27 @@ export class ClientsService {
       );
     }
     return client;
+  }
+  @Cron(CronExpression.EVERY_WEEK)
+  async deleteUnverifiedClientsAfterSevenDays(): Promise<void> {
+    try {
+      const sevenDaysAgo = moment().subtract(7, 'days').toDate();
+      const result = await this.clientModel
+        .deleteMany({
+          isVerified: false,
+          createdAt: { $lte: sevenDaysAgo },
+        })
+        .exec();
+
+      console.log(`${result.deletedCount} clients non vérifiés supprimés.`);
+    } catch (error) {
+      console.error(
+        'Erreur lors de la suppression des clients non vérifiés :',
+        error,
+      );
+      throw new Error(
+        'Une erreur est survenue lors de la suppression des clients non vérifiés.',
+      );
+    }
   }
 }

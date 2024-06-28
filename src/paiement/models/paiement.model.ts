@@ -20,7 +20,7 @@ export class Paiement {
   datepaiement: Date;
 
   @Prop({ type: [{ type: mongoose.SchemaTypes.ObjectId, ref: 'Facture' }] })
-  factures: Facture; // Référence vers le modèle de facture
+  factures: Facture[]; // Référence vers le modèle de facture
 
   @Prop({ type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Echeance' }] })
   echeances: Echeance[]; // Référence à plusieurs échéances

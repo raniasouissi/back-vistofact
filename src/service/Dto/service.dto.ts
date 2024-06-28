@@ -17,7 +17,7 @@ export class ServicesDto {
   reference: string;
   @ApiProperty()
   @IsNumber()
-  prix_unitaire: number;
+  prix_unitaire?: number;
   montant_ht: number;
   @ApiProperty()
   @IsNumber()

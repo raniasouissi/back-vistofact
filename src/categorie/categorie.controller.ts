@@ -8,15 +8,13 @@ import {
   Body,
   HttpException,
   HttpStatus,
-  UseGuards,
   Patch,
   InternalServerErrorException,
 } from '@nestjs/common';
 import { CategorieService } from './categorie.service';
 import { CreateCategorieDto, UpdateCategorieDto } from './dto/categorie.dto';
 import { Categorie } from './models/categorie.model';
-import { JwtAuthGuard } from 'src/auth/authtoken';
-//import { AuthGuard } from '@nestjs/passport';
+
 import { ActivatedCategoriesDto } from './Dto/activatedCategories.dto';
 
 @Controller('categorie')
@@ -96,7 +94,7 @@ export class CategorieController {
       );
     }
   }
-  @UseGuards(JwtAuthGuard) // Utilisez le JwtAuthGuard pour protéger cette route
+
   @Get('search/:query')
   async searchCategories(@Param('query') query: string): Promise<Categorie[]> {
     return this.categorieService.searchCategories(query);

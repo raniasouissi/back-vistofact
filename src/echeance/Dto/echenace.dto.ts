@@ -3,18 +3,16 @@ import { IsDate, IsNumber, IsOptional } from 'class-validator';
 export class EcheanceDto {
   @IsNumber()
   @IsOptional()
-  numCheque: number;
+  numCheque?: number;
 
   @IsNumber()
   @IsOptional()
-  montantCheque: number;
+  montantCheque?: number;
 
   @IsDate()
-  dateCh: Date;
+  dateCh?: Date;
 
   @IsDate()
   @IsOptional()
-  dateEcheance: Date;
-
-  paiements: string[]; // IDs des paiements associés
+  dateEcheance?: Date;
 }

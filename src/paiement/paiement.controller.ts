@@ -1,4 +1,10 @@
-import { Controller, Post, Body, BadRequestException } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  BadRequestException,
+  Get,
+} from '@nestjs/common';
 import { PaiementService } from './paiement.service';
 import { PaiementDto } from './dto/paiement.dto';
 import { Paiement } from './models/paiement.model';
@@ -14,5 +20,10 @@ export class PaiementController {
     } catch (error) {
       throw new BadRequestException(error.message);
     }
+  }
+
+  @Get()
+  async getAll(): Promise<Paiement[]> {
+    return this.paiementService.getAll();
   }
 }

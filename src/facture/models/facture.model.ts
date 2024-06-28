@@ -2,6 +2,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { Document, Model } from 'mongoose';
 import { Client } from 'src/client/models/clients.models';
 import { Devise } from 'src/devise/models/devise.model';
+import { Paiement } from 'src/paiement/models/paiement.model';
 import { Service } from 'src/service/models/service.model';
 
 export type FactureDocument = Facture & Document;
@@ -75,26 +76,6 @@ export class Facture {
   @Prop({ type: Date })
   dateEcheance: Date;
 
-  @Prop({ type: String, default: ' En attente' }) // Valeur par défaut pour statusDelai
-  statusDelai: string;
-  @Prop({ type: String, default: 'Non payé' }) // Valeur par défaut pour statusDelai
-  etatpaiement: string;
-
-  @Prop({ type: Number, default: null }) // Valeur par défaut pour montantPaye
-  montantPaye: number;
-
-  @Prop({ type: Number, default: null }) // Valeur par défaut pour montantRestant
-  montantRestant: number;
-
-  @Prop({ type: Number }) // Valeur par défaut pour montantRestant
-  delai: number;
-
-  @Prop({ type: Number, default: null }) // Valeur par défaut pour nombreJoursRetard
-  nombreJoursRetard: number;
-
-  @Prop({ type: Date, default: () => new Date() }) // Valeur par défaut pour datejour
-  datejour: Date;
-
   static async generateNumeroFacture(
     model: Model<FactureDocument>,
   ): Promise<string> {
@@ -112,6 +93,9 @@ export class Facture {
     const nextNumber = (lastNumber + 1).toString().padStart(4, '0');
     return `Fact  ${nextNumber} ${currentYear}`;
   }
+
+  @Prop({ type: [{ type: mongoose.SchemaTypes.ObjectId, ref: 'Paiement' }] })
+  paiemnts: Paiement[]; // Référence vers le modèle de facture
 }
 
 export const FactureSchema = SchemaFactory.createForClass(Facture);

@@ -86,6 +86,7 @@ export class AuthService {
         pays,
         resetToken: token,
         status,
+        isVerified: true,
       });
       await this.sendSetPasswordEmail(email, token, name);
 
@@ -159,9 +160,7 @@ export class AuthService {
 
     return { token };
   }*/
-  async signUp(
-    signUpDto: SignUpDto,
-  ): Promise<{ token: string; reference: string }> {
+  async signUp(signUpDto: SignUpDto): Promise<Client> {
     const {
       name,
       email,
@@ -195,7 +194,8 @@ export class AuthService {
     const reference =
       namecompany.substring(0, 3).toUpperCase() + randomNumber.toString();
 
-    await this.clientModel.create({
+    // Créer le client dans la base de données
+    const createdClient = await this.clientModel.create({
       name,
       email,
       password: hashedPassword,
@@ -213,10 +213,10 @@ export class AuthService {
       status,
     });
 
-    // Envoi de l'e-mail de vérification
     await this.sendVerificationEmail(email, verificationCode);
-    // Retourner à la fois le token et la référence
-    return { token: 'token', reference }; // Remplacez 'token' par le token réel que vous générez
+
+    // Retourner le client créé
+    return createdClient;
   }
 
   async verifyAccount(
@@ -335,8 +335,12 @@ export class AuthService {
 
     await this.mailerService.sendMail({
       to: email,
-      subject: 'réinitialisation de mot de passe',
-      html: `<p>  Code de vérification : <strong>${verificationCode}</strong></p>`,
+      subject: 'Réinitialisation de mot de passe - VBILL VISTO Consulting SA',
+      html: `<p>Vous avez demandé la réinitialisation de votre mot de passe.</p>
+         <p>Veuillez utiliser le code de vérification suivant dans les prochaines 60 secondes :</p>
+         <p style="font-size: 24px; font-weight: bold;">${verificationCode}</p>
+         <p>Si vous n'avez pas fait cette demande, vous pouvez ignorer cet e-mail en toute sécurité.</p>
+         <p>Cordialement,<br>VBILL VISO Consulting SA</p>`,
     });
 
     return true;

@@ -19,11 +19,12 @@ import { AuthService } from './auth.service';
 //import { ResetPasswordDto } from './Dto/resetpass.dto';
 //import { AuthGuard } from '@nestjs/passport';
 import { Response } from 'express';
-import * as Cookie from 'cookie';
+
 import { User } from 'src/users/models/users.models';
 import { SignupWithGpDto } from './Dto/signupwithgp.dto';
 import { VerifyDto } from './Dto/verif.dto';
 import { ChangePasswordDto } from './Dto/changePassword.dto';
+import { Client } from 'src/client/models/clients.models';
 //import { AuthGuard } from '@nestjs/passport';
 
 @Controller('auth')
@@ -50,24 +51,11 @@ export class AuthController {
   @Post('signup')
   async signUp(
     @Body() signUpDto: SignUpDto,
-    @Res({ passthrough: true })
-    res: Response,
-  ): Promise<{ token: string; reference: string }> {
+  ): Promise<{ message: string; client: Client }> {
     try {
-      const { token, reference } = await this.authService.signUp(signUpDto);
+      const createdClient = await this.authService.signUp(signUpDto);
 
-      const cookieValue = Cookie.serialize('AuthenticationToken', token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
-        maxAge: 3600,
-        path: '/',
-      });
-
-      // Set the cookie
-      res.setHeader('Set-Cookie', cookieValue);
-
-      return { token, reference };
+      return { message: 'Inscription réussie.', client: createdClient };
     } catch (error) {
       if (error.code === 11000 && error.keyPattern && error.keyPattern.email) {
         // Erreur de clé dupliquée, l'adresse e-mail existe déjà

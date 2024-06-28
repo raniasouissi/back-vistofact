@@ -16,9 +16,12 @@ import { DeviseModule } from './devise/devise.module';
 import { FactureModule } from './facture/facture.module';
 import { PaiementModule } from './paiement/paiement.module';
 import { EcheanceModule } from './echeance/echeance.module';
+import { NotificationModule } from './notification/notification.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
+    ScheduleModule.forRoot(),
     ConfigModule.forRoot({
       envFilePath: '.env',
       isGlobal: true,
@@ -37,6 +40,7 @@ import { EcheanceModule } from './echeance/echeance.module';
     FactureModule,
     PaiementModule,
     EcheanceModule,
+    NotificationModule,
   ],
   controllers: [AppController],
   providers: [AppService],
