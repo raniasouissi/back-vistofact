@@ -134,6 +134,7 @@ export class ClientsService {
           populate: [
             { path: 'services', populate: { path: 'tva' } },
             { path: 'timbre' },
+            { path: 'devise' },
             { path: 'parametrage' },
             { path: 'client' },
             { path: 'paiemnts', populate: { path: 'echeances' } },
@@ -234,6 +235,7 @@ export class ClientsService {
         .deleteMany({
           isVerified: false,
           createdAt: { $lte: sevenDaysAgo },
+          roles: 'client',
         })
         .exec();
 

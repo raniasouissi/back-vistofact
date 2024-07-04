@@ -6,6 +6,7 @@ import { FactureDto } from './Dto/facture.dto';
 import { Service } from 'src/service/models/service.model';
 import { ServicesDto } from 'src/service/Dto/service.dto';
 import { Client } from 'src/client/models/clients.models';
+import * as moment from 'moment';
 
 @Injectable()
 export class FactureService {
@@ -91,5 +92,71 @@ export class FactureService {
         },
       })
       .exec();
+  }
+
+  async searchFactures(query?: string): Promise<Facture[]> {
+    try {
+      const searchCriteria: any = {};
+
+      // Construire le critère de recherche basé sur le numéro de facture
+      if (query) {
+        searchCriteria.$or = [
+          { numeroFacture: { $regex: query, $options: 'i' } },
+        ];
+      }
+
+      // Ajouter la recherche par nom de client
+      if (query) {
+        searchCriteria.$or.push({
+          'client.name': { $regex: query, $options: 'i' },
+        });
+      }
+
+      // Ajouter la recherche par nom d'entreprise dans parametrage
+      if (query) {
+        searchCriteria.$or.push({
+          'parametrage.nomEntreprise': { $regex: query, $options: 'i' },
+        });
+      }
+
+      // Ajouter la recherche par date si la chaîne est une date valide avec moment
+      if (query && moment(query, moment.ISO_8601, true).isValid()) {
+        const date = moment(query).toDate(); // Convertir en objet Date
+
+        searchCriteria.date = { $eq: date }; // Utiliser $eq pour une correspondance exacte de la date
+      }
+
+      // Log pour vérifier le critère de recherche appliqué
+      console.log(
+        'Critère de recherche :',
+        JSON.stringify(searchCriteria, null, 2),
+      );
+
+      const factures = await this.factureModel
+        .find(searchCriteria)
+        .populate('devise')
+        .populate('services')
+        .populate('timbre')
+        .populate('client')
+        .populate('parametrage')
+        .populate({
+          path: 'paiemnts',
+          populate: {
+            path: 'echeances',
+            model: 'Echeance',
+          },
+        })
+        .exec();
+
+      // Log pour vérifier les résultats trouvés
+      console.log('Résultats trouvés :', factures);
+
+      return factures;
+    } catch (error) {
+      console.error('Erreur lors de la recherche des factures :', error);
+      throw new Error(
+        'Une erreur est survenue lors de la recherche des factures.',
+      );
+    }
   }
 }

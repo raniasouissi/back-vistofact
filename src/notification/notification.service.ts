@@ -45,4 +45,22 @@ export class NotificationService {
   async findNotificationsByClientId(clientId: string): Promise<Notification[]> {
     return this.notificationModel.find({ client: clientId }).exec();
   }
+
+  async deleteNotificationById(notificationId: string): Promise<void> {
+    const notification = await this.notificationModel.findById(notificationId);
+    if (!notification) {
+      throw new NotFoundException(
+        `Notification with ID ${notificationId} not found`,
+      );
+    }
+
+    const clientId = notification.client;
+
+    await this.notificationModel.findByIdAndDelete(notificationId);
+
+    // Mettre à jour les notifications du client
+    await this.clientModel.findByIdAndUpdate(clientId, {
+      $pull: { notifications: notificationId },
+    });
+  }
 }

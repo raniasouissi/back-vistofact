@@ -80,11 +80,7 @@ export class ServicesService {
       throw new NotFoundException('Service not found');
     }
   }
-  async searchServices(
-    query: string,
-    deviseName: string,
-    categorieTitle: string,
-  ): Promise<Service[]> {
+  async searchServices(query: string): Promise<Service[]> {
     try {
       const searchCriteria: any = {
         $or: [
@@ -93,25 +89,12 @@ export class ServicesService {
         ],
       };
 
-      if (deviseName) {
-        const devise = await this.serviceModel
-          .findOne({ name: deviseName })
-          .exec();
-        if (devise) {
-          searchCriteria['devise'] = devise._id;
-        }
-      }
+      const services = await this.serviceModel
+        .find(searchCriteria)
+        .populate('devise') // Popule la référence 'devise'
+        .populate('categories') // Popule la référence 'categories'
+        .exec();
 
-      if (categorieTitle) {
-        const categorie = await this.serviceModel
-          .findOne({ titre: categorieTitle })
-          .exec();
-        if (categorie) {
-          searchCriteria['categories'] = categorie._id;
-        }
-      }
-
-      const services = await this.serviceModel.find(searchCriteria).exec();
       return services;
     } catch (error) {
       console.error('Erreur lors de la recherche des services :', error);

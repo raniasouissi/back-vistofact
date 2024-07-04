@@ -23,9 +23,10 @@ export class FactureDto {
   @IsArray()
   @Type(() => ServicesDto)
   services: ServicesDto[];
+  @IsOptional()
   @ApiProperty({ description: 'La devise de la facture' })
   @IsMongoId()
-  timbreid: string;
+  timbreid?: string;
   @ApiProperty({ description: 'La devise de la facture' })
   @IsMongoId()
   clientid: string;

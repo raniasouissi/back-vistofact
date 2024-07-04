@@ -9,7 +9,6 @@ import {
   Delete,
   Patch,
   InternalServerErrorException,
-  Query,
 } from '@nestjs/common';
 import { ServicesService } from './service.service';
 import { ServicesDto } from './Dto/service.dto';
@@ -52,16 +51,8 @@ export class ServicesController {
   }
 
   @Get('search/:query')
-  async searchServices(
-    @Param('query') query: string,
-    @Query('devise') deviseName: string,
-    @Query('categorie') categorieTitle: string,
-  ): Promise<Service[]> {
-    return this.servicesService.searchServices(
-      query,
-      deviseName,
-      categorieTitle,
-    );
+  async searchServices(@Param('query') query: string): Promise<Service[]> {
+    return this.servicesService.searchServices(query);
   }
 
   /*@Patch(':id')

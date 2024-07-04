@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get } from '@nestjs/common';
+import { Controller, Post, Body, Get, Param } from '@nestjs/common';
 import { FactureService } from './facture.service';
 import { FactureDto } from './Dto/facture.dto';
 import { Facture } from './models/facture.model';
@@ -23,5 +23,9 @@ export class FactureController {
   @Get()
   async findAll(): Promise<Facture[]> {
     return this.factureService.findAll();
+  }
+  @Get('search/:query')
+  search(@Param('query') query: string): Promise<Facture[]> {
+    return this.factureService.searchFactures(query);
   }
 }
